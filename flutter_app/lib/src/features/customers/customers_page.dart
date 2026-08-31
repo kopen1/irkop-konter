@@ -21,7 +21,7 @@ class _CustomersPageState extends State<CustomersPage>{
   name.dispose();phone.dispose();
  }
  Future<void> _delete(Customer c)async{if(widget.businessId==null)return;final ok=await showDialog<bool>(context:context,builder:(x)=>AlertDialog(title:const Text('Hapus pelanggan?'),content:Text(c.name),actions:[TextButton(onPressed:()=>Navigator.pop(x),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(x,true),child:const Text('Hapus'))]));if(ok==true){try{await _repo.deleteCustomer(id:c.id,businessId:widget.businessId!);await _refresh();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal menghapus: '+e.toString())));}}}
- @override Widget build(BuildContext context)=>RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<List<Customer>>(future:_future,builder:(context,s){final data=(s.data??const <Customer>[]).where((c)=>c.name.toLowerCase().contains(_query.toLowerCase())||(c.phone??'').contains(_query)).toList();return Scaffold(body: ListView(padding:const EdgeInsets.all(16),children:[
+ @override Widget build(BuildContext context)=>RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<List<Customer>>(future:_future,builder:(context,s){final data=(s.data??const <Customer>[]).where((c)=>c.name.toLowerCase().contains(_query.toLowerCase())||(c.phone??'').contains(_query)).toList();return ListView(padding:const EdgeInsets.all(16),children:[
  const IrkopSectionHeader(eyebrow:'Pelanggan',title:'Data Pelanggan',subtitle:'Tambah, cari, edit dan kelola pelanggan.',icon:Icons.people_outline,action:'Database pelanggan'),const SizedBox(height:14),
  FilledButton.icon(onPressed:widget.businessId==null?null:()=>_edit(),icon:const Icon(Icons.person_add_alt_1_outlined),label:const Text('Tambah Pelanggan')),const SizedBox(height:12),
  TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari pelanggan atau nomor',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v)),const SizedBox(height:10),Text(data.length.toString()+' pelanggan',style:Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight:FontWeight.w800)),
@@ -29,4 +29,4 @@ class _CustomersPageState extends State<CustomersPage>{
  if(s.hasError)EmptyStateCard(icon:Icons.error_outline,title:'Gagal memuat pelanggan',subtitle:s.error.toString()),
  if(s.connectionState==ConnectionState.done&&!s.hasError&&data.isEmpty)const EmptyStateCard(icon:Icons.people_outline,title:'Belum ada pelanggan',subtitle:'Tambahkan pelanggan baru.'),
  ...data.map((c)=>Card(child:ListTile(onTap:()=>_edit(c),leading:CircleAvatar(child:Text(c.name.isEmpty?'P':c.name.substring(0,1).toUpperCase())),title:Text(c.name,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(c.phone?.isEmpty??true?'Tanpa nomor telepon':c.phone!),trailing:IconButton(icon:const Icon(Icons.delete_outline),onPressed:()=>_delete(c)))),
- ]));}
+  ]); })); }
