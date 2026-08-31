@@ -28,8 +28,7 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate web platform
-        run: flutter create --platforms=web --project-name irkop_cell .
+          pub-cache: true
       - name: Get dependencies
         run: flutter pub get
       - name: Build Flutter Web
