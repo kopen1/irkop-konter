@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/data/business_context_repository.dart';
+import '../../core/data/business_settings_repository.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, this.businessContext});
@@ -18,6 +19,7 @@ class _SettingsPageState extends State<SettingsPage>
   late final TextEditingController _header;
   late final TextEditingController _footer;
   final _businessRepository = BusinessContextRepository();
+  final _settingsRepository = BusinessSettingsRepository();
   bool _autoInput = true;
   bool _darkMode = false;
   bool _saving = false;
@@ -32,6 +34,7 @@ class _SettingsPageState extends State<SettingsPage>
     _address = TextEditingController(text: 'Alamat toko belum diatur');
     _header = TextEditingController(text: 'TERIMA KASIH ATAS KUNJUNGAN ANDA');
     _footer = TextEditingController(text: 'Semoga harimu menyenangkan!');
+    _loadPersistedSettings();
   }
 
   @override
@@ -42,6 +45,24 @@ class _SettingsPageState extends State<SettingsPage>
     _header.dispose();
     _footer.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPersistedSettings() async {
+    final contextData = widget.businessContext;
+    if (contextData == null) return;
+    try {
+      final settings = await _settingsRepository.load(contextData.businessId);
+      if (!mounted || settings == null) return;
+      setState(() {
+        _address.text = settings.address;
+        _header.text = settings.receiptHeader;
+        _footer.text = settings.receiptFooter;
+        _darkMode = settings.darkMode;
+        _autoInput = settings.autoInput;
+      });
+    } catch (_) {
+      // Defaults tetap dapat digunakan bila pengaturan belum tersedia.
+    }
   }
 
   Future<void> _saveGeneral() async {
@@ -57,6 +78,14 @@ class _SettingsPageState extends State<SettingsPage>
       await _businessRepository.updateBusinessName(
         businessId: contextData.businessId,
         name: _businessName.text,
+      );
+      await _settingsRepository.save(
+        businessId: contextData.businessId,
+        address: _address.text,
+        receiptHeader: _header.text,
+        receiptFooter: _footer.text,
+        darkMode: _darkMode,
+        autoInput: _autoInput,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
