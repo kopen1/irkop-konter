@@ -41,21 +41,41 @@ class OutletRepository {
     }
   }
 
-  Future<void> create({required String businessId,required String name})=>
-      _client.from('irkop_cell_outlets').insert({
+  Future<void> create({required String businessId,required String name}) async {
+    final payload={
+      'business_id':businessId,
+      'name':name.trim(),
+      'timezone':'Asia/Jakarta',
+      'is_active':true,
+    };
+    try {
+      await _client.from('irkop_cell_outlets').insert(payload);
+    } on PostgrestException catch (e) {
+      if(e.code!='42703') rethrow;
+      await _client.from('irkop_cell_outlets').insert({
         'business_id':businessId,
         'name':name.trim(),
         'timezone':'Asia/Jakarta',
-        'is_active':true,
       });
+    }
+  }
 
   Future<void> setActive({
     required String id,
     required String businessId,
     required bool active,
-  })=>_client
-      .from('irkop_cell_outlets')
-      .update({'is_active':active})
-      .eq('id',id)
-      .eq('business_id',businessId);
+  }) async {
+    try {
+      await _client
+          .from('irkop_cell_outlets')
+          .update({'is_active':active})
+          .eq('id',id)
+          .eq('business_id',businessId);
+    } on PostgrestException catch (e) {
+      if(e.code=='42703') {
+        throw StateError('Kolom status outlet belum tersedia. Jalankan migration 20260831000400_add_outlet_is_active.sql.');
+      }
+      rethrow;
+    }
+  }
 }
