@@ -89881,7 +89881,7 @@ i=j<=2?j:3
 h=j===10?new A.Ns(g.gahx(),f):[new A.Fi(e,r,f),new A.yx(q,p,f),new A.Ef(f),new A.BL(o,f),new A.z7(n,f),new A.Co(m,f),new A.yX(l,f),new A.FW("Outlet",k,B.kY,f),B.Zc,new A.PN(d,f)][j]
 if(j===0)e="IRKOP CELL"
 else e=s?"MODE DEMO":d.d
-return A.agr(A.aEg(!1,A.ay(e,f,f,f,f,f,f)),h,new A.Ny(i,B.Js,new A.arc(g),f))}}
+return A.agr(A.aEg(!1,A.ay(e+" \u2022 v0831-101",f,f,f,f,f,f)),h,new A.Ny(i,B.Js,new A.arc(g),f))}}
 A.ar9.prototype={
 $0(){return this.a.d=this.b},
 $S:0}
