@@ -28,11 +28,11 @@ jobs:
           channel: stable
           cache: true
       - name: Generate native Android platform
-        run: flutter create --platforms=android --project-name irkop_cell .
+        run: flutter create --platforms=android,web --project-name irkop_cell .
       - name: Get dependencies
         run: flutter pub get
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze lib
       - name: Build Android APK
         run: |
           flutter build apk --release \
