@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../core/data/demo_store.dart';
 import '../cashier/cashier_page.dart';
 import '../reports/reports_page.dart';
 import '../transactions/transactions_page.dart';
