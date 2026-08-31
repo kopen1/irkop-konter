@@ -12,6 +12,7 @@ import '../outlets/outlets_page.dart';
 import '../more/more_page.dart';
 import '../credits/credits_page.dart';
 import '../devices/devices_page.dart';
+import '../expenses/expenses_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key,required this.demoMode,this.businessContext});
@@ -34,6 +35,7 @@ class _HomePageState extends State<HomePage>{
    OutletsPage(businessId:ctx?.businessId),
    DevicesPage(businessId:ctx?.businessId),
    SettingsPage(businessContext:ctx),
+   ExpensesPage(businessId:ctx?.businessId),
   ];
   final compactIndex=index<=2?index:3;
   final body=index==10?MorePage(onOpen:_open):pages[index];
