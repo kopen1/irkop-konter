@@ -1,0 +1,2 @@
+class Product { final String id,name,category; final double price,stock; const Product({required this.id,required this.name,required this.category,required this.price,required this.stock}); }
+class CartItem { final Product product; final double qty; const CartItem({required this.product,required this.qty}); double get subtotal=>product.price*qty; CartItem copyWith({double? qty})=>CartItem(product: product,qty: qty??this.qty); }
