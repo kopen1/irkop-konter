@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/app_page_index.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key, required this.onOpen});
@@ -8,18 +9,18 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final groups = <_MoreGroup>[
       _MoreGroup('Master Data', [
-        _MoreItem(Icons.inventory_2_outlined, 'Produk', 'Katalog, kategori & stok', 3),
-        _MoreItem(Icons.people_outline, 'Pelanggan', 'Data pelanggan', 4),
+        _MoreItem(Icons.inventory_2_outlined, 'Produk', 'Katalog, kategori & stok', AppPageIndex.products),
+        _MoreItem(Icons.people_outline, 'Pelanggan', 'Data pelanggan', AppPageIndex.customers),
       ]),
       _MoreGroup('Operasional', [
-        _MoreItem(Icons.credit_score_outlined, 'Kasbon / Piutang', 'Tagihan & pembayaran', 6),
-        _MoreItem(Icons.account_balance_wallet_outlined, 'Pengeluaran', 'Biaya operasional', 10),
-        _MoreItem(Icons.storefront_outlined, 'Outlet', 'Kelola outlet aktif', 7),
-        _MoreItem(Icons.devices_outlined, 'Perangkat', 'Slot & perangkat', 8),
+        _MoreItem(Icons.credit_score_outlined, 'Kasbon / Piutang', 'Tagihan & pembayaran', AppPageIndex.credits),
+        _MoreItem(Icons.account_balance_wallet_outlined, 'Pengeluaran', 'Biaya operasional', AppPageIndex.expenses),
+        _MoreItem(Icons.storefront_outlined, 'Outlet', 'Kelola outlet aktif', AppPageIndex.outlets),
+        _MoreItem(Icons.devices_outlined, 'Perangkat', 'Slot & perangkat', AppPageIndex.devices),
       ]),
       _MoreGroup('Analitik & Sistem', [
-        _MoreItem(Icons.bar_chart_outlined, 'Laporan', 'Penjualan & ringkasan bisnis', 5),
-        _MoreItem(Icons.settings_outlined, 'Pengaturan', 'Bisnis, akun & sistem', 9),
+        _MoreItem(Icons.bar_chart_outlined, 'Laporan', 'Penjualan & ringkasan bisnis', AppPageIndex.reports),
+        _MoreItem(Icons.settings_outlined, 'Pengaturan', 'Bisnis, akun & sistem', AppPageIndex.settings),
       ]),
     ];
 

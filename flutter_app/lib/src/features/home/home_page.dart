@@ -13,6 +13,7 @@ import '../more/more_page.dart';
 import '../credits/credits_page.dart';
 import '../devices/devices_page.dart';
 import '../expenses/expenses_page.dart';
+import '../../shared/app_page_index.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key,required this.demoMode,this.businessContext});
@@ -20,8 +21,11 @@ class HomePage extends StatefulWidget {
   @override State<HomePage> createState()=>_HomePageState();
 }
 class _HomePageState extends State<HomePage>{
- int index=0;
- void _open(int value)=>setState(()=>index=value);
+ int index=AppPageIndex.dashboard;
+ void _open(int value){
+  if(value<0||value>AppPageIndex.more)return;
+  setState(()=>index=value);
+ }
  @override Widget build(BuildContext context){
   final ctx=widget.businessContext;
   final pages=[
@@ -37,12 +41,14 @@ class _HomePageState extends State<HomePage>{
    SettingsPage(businessContext:ctx),
    ExpensesPage(businessId:ctx?.businessId),
   ];
-  final compactIndex=index<=2?index:3;
-  final body=index==12?MorePage(onOpen:_open):pages[index];
+  final compactIndex=index<=AppPageIndex.transactions?index:3;
+  final body=index==AppPageIndex.more
+    ?MorePage(onOpen:_open)
+    :pages[index>=0&&index<pages.length?index:AppPageIndex.dashboard];
   return Scaffold(
    appBar:AppBar(title:Text('${index==0?'IRKOP CELL':ctx==null?'MODE DEMO':ctx.outletName}'),centerTitle:false),
    body:body,
-   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=12);}else{setState(()=>index=value);}},destinations:const[
+   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){_open(AppPageIndex.more);}else{_open(value);}},destinations:const[
     NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Beranda'),
     NavigationDestination(icon:Icon(Icons.point_of_sale_outlined),selectedIcon:Icon(Icons.point_of_sale),label:'Kasir'),
     NavigationDestination(icon:Icon(Icons.receipt_long_outlined),selectedIcon:Icon(Icons.receipt_long),label:'Transaksi'),
