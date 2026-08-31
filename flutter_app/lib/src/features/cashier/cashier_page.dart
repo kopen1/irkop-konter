@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/data/product_repository.dart';
+import '../../core/data/customer_repository.dart';
 import '../../core/data/transaction_repository.dart';
 import '../../core/models/business_models.dart';
 
@@ -14,6 +15,8 @@ class CashierPage extends StatefulWidget {
 class _CashierPageState extends State<CashierPage> {
   final ProductRepository _products=ProductRepository();
   final TransactionRepository _transactions=TransactionRepository();
+  final CustomerRepository _customers=CustomerRepository();
+  Customer? _customer;
   final List<CartItem> _cart=[];
   late Future<List<Product>> _future;
   String _query='';
@@ -92,6 +95,8 @@ class _CashierPageState extends State<CashierPage> {
     );
   }
 
+  Future<void> _pickCustomer() async {if(widget.businessId==null)return;final list=await _customers.loadCustomers(widget.businessId!);if(!mounted)return;final x=await showModalBottomSheet<Customer>(context:context,builder:(c)=>SafeArea(child:ListView(children:[ListTile(title:const Text('Pelanggan'),subtitle:const Text('Pilih pelanggan untuk transaksi'),trailing:TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Lepaskan')),...list.map((v)=>ListTile(title:Text(v.name),subtitle:Text(v.phone??'Tanpa nomor'),onTap:()=>Navigator.pop(c,v)))])));if(x!=null&&mounted)setState(()=>_customer=x);}
+
   Future<void> _pay(NumberFormat currency) async {
     if(_cart.isEmpty||widget.businessId==null||widget.outletId==null)return;
     final method=await showModalBottomSheet<String>(
@@ -117,9 +122,10 @@ class _CashierPageState extends State<CashierPage> {
         outletId:widget.outletId!,
         items:List<CartItem>.from(_cart),
         paymentMethod:method,
+        customerId:_customer?.id,
       );
       if(!mounted)return;
-      setState(()=>_cart.clear());
+      setState((){_cart.clear();_customer=null;});
       _future=_products.loadProducts(widget.businessId!);
       await showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Pembayaran berhasil'),content:Text('Total '+currency.format(total)+'\nStok telah diperbarui.'),actions:[FilledButton(onPressed:()=>Navigator.pop(c),child:const Text('Selesai'))]));
     }catch(e){
@@ -142,6 +148,8 @@ class _CashierPageState extends State<CashierPage> {
         Text(_cart.fold<double>(0,(sum,item)=>sum+item.qty).toStringAsFixed(0)+' item di keranjang • '+currency.format(total)),
       ]))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari produk untuk dijual',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v))),
+      const SizedBox(height:8),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:OutlinedButton.icon(onPressed:_pickCustomer,icon:const Icon(Icons.person_outline),label:Text(_customer==null?'Pilih Pelanggan (opsional)':_customer!.name),)),
       const SizedBox(height:8),
       Expanded(child:FutureBuilder<List<Product>>(future:_future,builder:(context,snapshot){
         if(snapshot.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());

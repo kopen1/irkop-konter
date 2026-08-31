@@ -34,10 +34,10 @@ class TransactionRepository {
     final completed=transactions.where((t){final d=t.transactionAt.toLocal();return !d.isBefore(today)&&t.status=='completed';}).toList();
     return DashboardMetrics(todayRevenue:completed.fold<double>(0,(s,t)=>s+t.total),todayTransactions:completed.length,recentTransactions:transactions.take(8).toList());
   }
-  Future<TransactionSummary> checkout({required String businessId,required String outletId,required List<CartItem> items,required String paymentMethod}) async {
+  Future<TransactionSummary> checkout({required String businessId,required String outletId,required List<CartItem> items,required String paymentMethod,String? customerId}) async {
     if(items.isEmpty)throw StateError('Keranjang kosong.');
     final total=items.fold<double>(0,(s,i)=>s+i.subtotal),no='TRX-'+DateTime.now().microsecondsSinceEpoch.toString();
-    final transaction=await _client.from('irkop_cell_transactions').insert({'business_id':businessId,'outlet_id':outletId,'transaction_no':no,'payment_method':paymentMethod,'status':'completed','total':total}).select('id,transaction_no,payment_method,status,total,transaction_at').single();
+    final transaction=await _client.from('irkop_cell_transactions').insert({'business_id':businessId,'outlet_id':outletId,'transaction_no':no,'payment_method':paymentMethod,'status':'completed','total':total,'customer_id':customerId}).select('id,transaction_no,payment_method,status,total,transaction_at').single();
     final id=transaction['id'] as String;
     await _client.from('irkop_cell_transaction_items').insert(items.map((i)=>{'transaction_id':id,'product_id':i.product.id,'product_name':i.product.name,'qty':i.qty,'unit_price':i.product.price,'subtotal':i.subtotal}).toList());
     for(final i in items){final next=i.product.stock-i.qty;await _client.from('irkop_cell_products').update({'stock':next<0?0:next}).eq('id',i.product.id).eq('business_id',businessId);}
