@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/data/business_context_repository.dart';
 import '../../core/data/transaction_repository.dart';
 import '../cashier/cashier_page.dart';
 import '../reports/reports_page.dart';
 import '../transactions/transactions_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.demoMode});
+  const HomePage({super.key, required this.demoMode, this.businessContext});
 
   final bool demoMode;
+  final BusinessContext? businessContext;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -30,7 +32,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(titles[index]),
+        title: Text(widget.businessContext == null ? titles[index] : '${titles[index]} • ${widget.businessContext!.outletName}'),
         actions: widget.demoMode
             ? const [
                 Padding(
