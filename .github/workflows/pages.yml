@@ -1,18 +1,19 @@
-name: Build Flutter Web
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
     branches: [master]
     paths-ignore:
       - 'planning/**'
-      - 'docs/**'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: web-build
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -21,30 +22,29 @@ jobs:
     defaults:
       run:
         working-directory: flutter_app
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
           pub-cache: true
-
       - name: Get dependencies
         run: flutter pub get
-
       - name: Build Flutter Web
         run: |
           flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+      - name: Write deployment marker
+        run: echo "${{ github.sha }}" > build/web/BUILD_COMMIT.txt
 
-      - name: Publish to master/docs
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: master
-          publish_dir: ./flutter_app/build/web
-          destination_dir: docs
-          keep_files: true
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
