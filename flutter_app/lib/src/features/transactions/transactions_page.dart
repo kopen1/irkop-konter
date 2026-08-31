@@ -1,62 +1,155 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../core/data/transaction_repository.dart';
 import '../../shared/irkop_ui.dart';
 
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key, this.businessId});
   final String? businessId;
-  @override State<TransactionsPage> createState() => _TransactionsPageState();
+
+  @override
+  State<TransactionsPage> createState() => _TransactionsPageState();
 }
 
 class _TransactionsPageState extends State<TransactionsPage> {
+  final _repo = TransactionRepository();
+  late Future<List<TransactionSummary>> _future;
   String _query = '';
-  static const _rows = [
-    _TransactionRow('TRX-DEMO-001', 'CASH', 25000),
-    _TransactionRow('TRX-DEMO-002', 'TRANSFER', 18000),
-  ];
-  String _rupiah(double value) => 'Rp ' + value.toStringAsFixed(0);
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<List<TransactionSummary>> _load() {
+    final businessId = widget.businessId;
+    if (businessId == null) return Future.value(const []);
+    return _repo.loadTransactions(businessId);
+  }
+
+  Future<void> _refresh() async {
+    setState(() => _future = _load());
+    await _future;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rows = _rows.where((row) => row.no.toLowerCase().contains(_query.toLowerCase())).toList();
-    return Scaffold(
-      appBar: AppBar(title: const Text('Transaksi')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const IrkopSectionHeader(
-            eyebrow: 'Riwayat penjualan',
-            title: 'Transaksi',
-            subtitle: 'Riwayat transaksi tersedia di sini.',
-            icon: Icons.receipt_long_outlined,
-            action: 'Demo siap',
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Cari nomor transaksi',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) => setState(() => _query = value),
-          ),
-          const SizedBox(height: 12),
-          ...rows.map((row) => Card(
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.receipt_long)),
-              title: Text(row.no),
-              subtitle: Text(row.method),
-              trailing: Text(_rupiah(row.total), style: const TextStyle(fontWeight: FontWeight.w800)),
-            ),
-          )),
-        ],
+    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<List<TransactionSummary>>(
+        future: _future,
+        builder: (context, snapshot) {
+          final transactions = (snapshot.data ?? const <TransactionSummary>[])
+              .where((item) {
+                final q = _query.trim().toLowerCase();
+                return q.isEmpty ||
+                    item.transactionNo.toLowerCase().contains(q) ||
+                    item.paymentMethod.toLowerCase().contains(q) ||
+                    item.status.toLowerCase().contains(q);
+              })
+              .toList();
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const IrkopSectionHeader(
+                eyebrow: 'Riwayat penjualan',
+                title: 'Transaksi',
+                subtitle: 'Tarik ke bawah untuk memperbarui riwayat transaksi.',
+                icon: Icons.receipt_long_outlined,
+                action: 'Riwayat aktif',
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Cari nomor transaksi',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) => setState(() => _query = value),
+              ),
+              const SizedBox(height: 12),
+              if (snapshot.connectionState != ConnectionState.done)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              if (snapshot.hasError)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Text('Gagal memuat transaksi: ${snapshot.error}'),
+                  ),
+                ),
+              if (snapshot.connectionState == ConnectionState.done &&
+                  !snapshot.hasError &&
+                  transactions.isEmpty)
+                const EmptyStateCard(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Belum ada transaksi',
+                  subtitle: 'Transaksi dari Kasir akan muncul di halaman ini.',
+                ),
+              ...transactions.map(
+                (item) => Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.receipt_long_outlined),
+                    ),
+                    title: Text(item.transactionNo),
+                    subtitle: Text(
+                      '${item.paymentMethod} • ${item.status}\n'
+                      '${item.transactionAt.toLocal().toString().substring(0, 16)}',
+                    ),
+                    isThreeLine: true,
+                    trailing: Text(
+                      money.format(item.total),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    onTap: () => _showDetails(item),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-}
 
-class _TransactionRow {
-  const _TransactionRow(this.no, this.method, this.total);
-  final String no;
-  final String method;
-  final double total;
+  Future<void> _showDetails(TransactionSummary transaction) async {
+    final items = await _repo.loadTransactionItems(transaction.id);
+    if (!mounted) return;
+    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          shrinkWrap: true,
+          children: [
+            Text(
+              transaction.transactionNo,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text('${transaction.paymentMethod} • ${transaction.status}'),
+            const Divider(height: 28),
+            ...items.map(
+              (item) => ListTile(
+                title: Text(item.productName),
+                subtitle: Text('${item.qty.toStringAsFixed(0)} × ${money.format(item.unitPrice)}'),
+                trailing: Text(money.format(item.subtotal)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
