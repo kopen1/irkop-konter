@@ -13,7 +13,7 @@ class MorePage extends StatelessWidget {
       ]),
       _MoreGroup('Operasional', [
         _MoreItem(Icons.credit_score_outlined, 'Kasbon / Piutang', 'Tagihan & pembayaran', 6),
-        _MoreItem(Icons.account_balance_wallet_outlined, 'Pengeluaran', 'Biaya operasional', 11),
+        _MoreItem(Icons.account_balance_wallet_outlined, 'Pengeluaran', 'Biaya operasional', 10),
         _MoreItem(Icons.storefront_outlined, 'Outlet', 'Kelola outlet aktif', 7),
         _MoreItem(Icons.devices_outlined, 'Perangkat', 'Slot & perangkat', 8),
       ]),
