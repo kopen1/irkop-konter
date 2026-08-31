@@ -1,4 +1,4 @@
-name: Build IRKOP Konter
+name: Validate IRKOP Konter Web
 
 on:
   push:
@@ -10,13 +10,18 @@ on:
     branches: [master]
     paths:
       - 'flutter_app/**'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: validate-web-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  validate-web:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,27 +32,17 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate native Android platform
-        run: flutter create --platforms=android,web --project-name irkop_cell .
+      - name: Generate Flutter Web platform
+        run: flutter create --platforms=web --project-name irkop_cell .
       - name: Get dependencies
         run: flutter pub get
-      - name: Analyze
+      - name: Analyze application
         run: flutter analyze lib
-      - name: Build Android APK
-        run: |
-          flutter build apk --release \
-            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
       - name: Build Web
         run: |
-          flutter build web --release \
+          flutter build web --release --base-href "/irkop-konter/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: irkop-konter-apk
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: irkop-konter-web
