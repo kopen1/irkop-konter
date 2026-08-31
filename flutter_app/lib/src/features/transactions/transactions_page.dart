@@ -20,19 +20,35 @@ class _TransactionsPageState extends State<TransactionsPage>{
 
   Future<void> _showDetail(TransactionSummary transaction) async {
     final currency=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);
-    await showModalBottomSheet<void>(context:context,isScrollControlled:true,builder:(context)=>SafeArea(child:Padding(
-      padding:const EdgeInsets.fromLTRB(20,18,20,24),
-      child:FutureBuilder<List<TransactionItemSummary>>(future:_repo.loadTransactionItems(transaction.id),builder:(context,snapshot)=>Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Row(children:[Expanded(child:Text('Detail Transaksi',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800))),IconButton(onPressed:()=>Navigator.pop(context),icon:const Icon(Icons.close))]),
-        Text(transaction.transactionNo),const SizedBox(height:12),Text('Tanggal: '+_date(transaction.transactionAt)),Text('Pembayaran: '+transaction.paymentMethod.toUpperCase()),const Divider(height:28),
-        if(snapshot.connectionState!=ConnectionState.done)const Center(child:Padding(padding:EdgeInsets.all(24),child:CircularProgressIndicator()))
-        else if(snapshot.hasError)Text('Gagal memuat item: '+snapshot.error.toString())
-        else ...[
-          ...snapshot.data!.map((item)=>ListTile(contentPadding:EdgeInsets.zero,title:Text(item.productName),subtitle:Text(item.qty.toString()+' × '+currency.format(item.unitPrice)),trailing:Text(currency.format(item.subtotal),style:const TextStyle(fontWeight:FontWeight.w700)))),
-          const Divider(),Row(children:[const Expanded(child:Text('Total',style:TextStyle(fontWeight:FontWeight.w800,fontSize:18))),Text(currency.format(transaction.total),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:18))]),
-        ],
-      ])),
-    )));
+    await showModalBottomSheet<void>(
+      context:context,
+      builder:(context)=>SafeArea(
+        child:Padding(
+          padding:const EdgeInsets.fromLTRB(20,18,20,24),
+          child:Column(
+            mainAxisSize:MainAxisSize.min,
+            crossAxisAlignment:CrossAxisAlignment.start,
+            children:[
+              Row(children:[
+                Expanded(child:Text('Detail Transaksi',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800))),
+                IconButton(onPressed:()=>Navigator.pop(context),icon:const Icon(Icons.close)),
+              ]),
+              const SizedBox(height:8),
+              Text(transaction.transactionNo,style:const TextStyle(fontWeight:FontWeight.w700)),
+              const SizedBox(height:12),
+              Text('Tanggal: '+_date(transaction.transactionAt)),
+              Text('Pembayaran: '+transaction.paymentMethod.toUpperCase()),
+              Text('Status: '+transaction.status),
+              const Divider(height:28),
+              Row(children:[
+                const Expanded(child:Text('Total',style:TextStyle(fontWeight:FontWeight.w800,fontSize:18))),
+                Text(currency.format(transaction.total),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:18)),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override Widget build(BuildContext context){
