@@ -17,8 +17,10 @@ class _SettingsPageState extends State<SettingsPage>
   late final TextEditingController _address;
   late final TextEditingController _header;
   late final TextEditingController _footer;
+  final _businessRepository = BusinessContextRepository();
   bool _autoInput = true;
   bool _darkMode = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -40,6 +42,34 @@ class _SettingsPageState extends State<SettingsPage>
     _header.dispose();
     _footer.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveGeneral() async {
+    final contextData = widget.businessContext;
+    if (contextData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pengaturan bisnis tidak tersedia di mode demo.')),
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _businessRepository.updateBusinessName(
+        businessId: contextData.businessId,
+        name: _businessName.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama bisnis berhasil disimpan.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan pengaturan: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -147,11 +177,11 @@ class _SettingsPageState extends State<SettingsPage>
           ),
           const SizedBox(height: 18),
           FilledButton.icon(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Perubahan tampilan disimpan di perangkat.')),
-            ),
-            icon: const Icon(Icons.save_outlined),
-            label: const Text('Simpan perubahan'),
+            onPressed: _saving ? null : _saveGeneral,
+            icon: _saving
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.save_outlined),
+            label: Text(_saving ? 'Menyimpan...' : 'Simpan perubahan'),
           ),
         ],
       );
