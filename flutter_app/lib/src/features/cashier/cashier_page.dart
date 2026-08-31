@@ -184,7 +184,7 @@ class _CashierPageState extends State<CashierPage> {
       ]))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari produk untuk dijual',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v))),
       const SizedBox(height:8),
-      Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:OutlinedButton.icon(onPressed:_pickCustomer,icon:const Icon(Icons.person_outline),label:Text(_customer==null?'Pilih Pelanggan (opsional)':_customer!.name),)),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:OutlinedButton.icon(onPressed:_pickCustomer,icon:const Icon(Icons.person_add_alt_1),label:Text(_customer==null?'PILIH PELANGGAN': 'Pelanggan: '+_customer!.name),)),
       const SizedBox(height:8),
       Expanded(child:FutureBuilder<List<Product>>(future:_future,builder:(context,snapshot){
         if(snapshot.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
