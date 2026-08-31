@@ -99,8 +99,9 @@ class _ProductsPageState extends State<ProductsPage> {
 
     if (saved == true && name.text.trim().isNotEmpty) {
       try {
-        final parsedPrice = double.tryParse(price.text.replaceAll(',', '.')) ?? 0;
-        final parsedStock = double.tryParse(stock.text.replaceAll(',', '.')) ?? 0;
+        final parsedPrice = double.tryParse(price.text.replaceAll(',', '.'));
+        final parsedStock = double.tryParse(stock.text.replaceAll(',', '.'));
+        if(parsedPrice==null||parsedPrice<0||parsedStock==null||parsedStock<0){_message('Harga dan stok harus berupa angka 0 atau lebih.');return;}
         if (product == null) {
           await _repo.createProduct(
             businessId: businessId,

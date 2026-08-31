@@ -119,7 +119,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
   }
 
   Future<void> _showDetails(TransactionSummary transaction) async {
-    final items = await _repo.loadTransactionItems(transaction.id);
+    List<TransactionItemSummary> items;
+    try{items=await _repo.loadTransactionItems(transaction.id);}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal memuat detail transaksi: '+e.toString())));return;}
     if (!mounted) return;
     final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 

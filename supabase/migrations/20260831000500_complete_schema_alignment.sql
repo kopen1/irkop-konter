@@ -204,3 +204,19 @@ from public.irkop_cell_transactions t
 left join public.irkop_cell_credit_payments p on p.transaction_id=t.id
 where t.payment_method='credit'
 group by t.id,t.business_id,t.customer_id,t.transaction_no,t.total,t.due_date,t.status;
+
+
+-- FINAL DATA INTEGRITY
+alter table public.irkop_cell_products drop constraint if exists irkop_cell_products_stock_nonnegative;
+alter table public.irkop_cell_products add constraint irkop_cell_products_stock_nonnegative check (stock >= 0);
+alter table public.irkop_cell_products drop constraint if exists irkop_cell_products_sell_price_nonnegative;
+alter table public.irkop_cell_products add constraint irkop_cell_products_sell_price_nonnegative check (sell_price >= 0);
+alter table public.irkop_cell_transactions drop constraint if exists irkop_cell_transactions_total_nonnegative;
+alter table public.irkop_cell_transactions add constraint irkop_cell_transactions_total_nonnegative check (total >= 0);
+create or replace function public.irkop_cell_touch_updated_at() returns trigger language plpgsql as $$ begin new.updated_at=now(); return new; end; $$;
+drop trigger if exists irkop_cell_products_touch_updated_at on public.irkop_cell_products;
+create trigger irkop_cell_products_touch_updated_at before update on public.irkop_cell_products for each row execute function public.irkop_cell_touch_updated_at();
+drop trigger if exists irkop_cell_customers_touch_updated_at on public.irkop_cell_customers;
+create trigger irkop_cell_customers_touch_updated_at before update on public.irkop_cell_customers for each row execute function public.irkop_cell_touch_updated_at();
+drop trigger if exists irkop_cell_transactions_touch_updated_at on public.irkop_cell_transactions;
+create trigger irkop_cell_transactions_touch_updated_at before update on public.irkop_cell_transactions for each row execute function public.irkop_cell_touch_updated_at();

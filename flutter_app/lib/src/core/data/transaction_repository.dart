@@ -42,11 +42,13 @@ class TransactionRepository {
   }
   Future<TransactionSummary> checkout({required String businessId,required String outletId,required List<CartItem> items,required String paymentMethod,String? customerId}) async {
     if(items.isEmpty)throw StateError('Keranjang kosong.');
+    if(!const {'cash','transfer','credit'}.contains(paymentMethod))throw StateError('Metode pembayaran tidak valid.');
+    if(items.any((i)=>i.qty<=0||i.qty>i.product.stock))throw StateError('Jumlah item tidak valid atau melebihi stok.');
     final total=items.fold<double>(0,(s,i)=>s+i.subtotal),no='TRX-'+DateTime.now().microsecondsSinceEpoch.toString();
     final transaction=await _client.from('irkop_cell_transactions').insert({'business_id':businessId,'outlet_id':outletId,'transaction_no':no,'payment_method':paymentMethod,'status':'completed','total':total,'customer_id':customerId}).select('id,transaction_no,payment_method,status,total,transaction_at').single();
     final id=transaction['id'] as String;
     await _client.from('irkop_cell_transaction_items').insert(items.map((i)=>{'transaction_id':id,'product_id':i.product.id,'product_name':i.product.name,'qty':i.qty,'unit_price':i.product.price,'subtotal':i.subtotal}).toList());
-    for(final i in items){final next=i.product.stock-i.qty;await _client.from('irkop_cell_products').update({'stock':next<0?0:next}).eq('id',i.product.id).eq('business_id',businessId);}
+    for(final i in items){final next=i.product.stock-i.qty;await _client.from('irkop_cell_products').update({'stock':next}).eq('id',i.product.id).eq('business_id',businessId);}
     if(paymentMethod=='cash')await _client.from('irkop_cell_cash_mutations').insert({'business_id':businessId,'outlet_id':outletId,'transaction_id':id,'mutation_type':'in','amount':total,'description':'Penjualan '+no});
     return TransactionSummary.fromMap(transaction);
   }

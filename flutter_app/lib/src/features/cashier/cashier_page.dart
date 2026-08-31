@@ -31,8 +31,9 @@ class _CashierPageState extends State<CashierPage> {
   void _add(Product p){
     final i=_cart.indexWhere((x)=>x.product.id==p.id);
     setState((){
+      if(p.stock<=0)return;
       if(i<0){_cart.add(CartItem(product:p,qty:1));}
-      else{_cart[i]=_cart[i].copyWith(qty:_cart[i].qty+1);}
+      else if(_cart[i].qty<p.stock){_cart[i]=_cart[i].copyWith(qty:_cart[i].qty+1);}
     });
   }
 
@@ -41,7 +42,7 @@ class _CashierPageState extends State<CashierPage> {
     if(index<0)return;
     setState((){
       final next=_cart[index].qty+delta;
-      if(next<=0){_cart.removeAt(index);}else{_cart[index]=_cart[index].copyWith(qty:next);}
+      if(next<=0){_cart.removeAt(index);}else if(next<=product.stock){_cart[index]=_cart[index].copyWith(qty:next);}
     });
   }
 
@@ -99,7 +100,8 @@ class _CashierPageState extends State<CashierPage> {
     final businessId = widget.businessId;
     if (businessId == null) return;
 
-    final customers = await _customers.loadCustomers(businessId);
+    List<Customer> customers;
+    try{customers=await _customers.loadCustomers(businessId);}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal memuat pelanggan: '+e.toString())));return;}
     if (!mounted) return;
 
     final selected = await showModalBottomSheet<Customer>(
@@ -111,7 +113,7 @@ class _CashierPageState extends State<CashierPage> {
               title: const Text('Pelanggan'),
               subtitle: const Text('Pilih pelanggan untuk transaksi'),
               trailing: TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {setState(()=>_customer=null);Navigator.pop(context);},
                 child: const Text('Lepaskan'),
               ),
             ),
@@ -134,6 +136,7 @@ class _CashierPageState extends State<CashierPage> {
 
   Future<void> _pay(NumberFormat currency) async {
     if(_cart.isEmpty||widget.businessId==null||widget.outletId==null)return;
+    if(_cart.any((item)=>item.qty>item.product.stock)){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Jumlah keranjang melebihi stok.')));return;}
     final method=await showModalBottomSheet<String>(
       context:context,
       builder:(sheetContext)=>SafeArea(
@@ -204,7 +207,7 @@ class _CashierPageState extends State<CashierPage> {
               subtitle:Text(p.category+' • Stok '+p.stock.toString()),
               trailing:Row(mainAxisSize:MainAxisSize.min,children:[
                 Text(currency.format(p.price),style:const TextStyle(fontWeight:FontWeight.bold)),
-                IconButton(icon:const Icon(Icons.add_circle),onPressed:()=>_add(p)),
+                IconButton(icon:const Icon(Icons.add_circle),onPressed:p.stock<=0?null:()=>_add(p)),
               ]),
             ));
           },
