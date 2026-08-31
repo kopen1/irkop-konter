@@ -1,6 +1,6 @@
 # Supabase Automation
 
-Production migrations are applied automatically by GitHub Actions when files under `supabase/migrations/` change on `master`.
+Schema migrations are applied automatically by GitHub Actions when files under `supabase/migrations/` change on `master`.
 
 Required GitHub Actions secrets:
 - SUPABASE_ACCESS_TOKEN
@@ -8,6 +8,16 @@ Required GitHub Actions secrets:
 - SUPABASE_URL
 - SUPABASE_ANON_KEY
 
-The random demo seed is intentionally NOT executed automatically against production. It is development/staging-only.
+## Demo architecture
 
-Before the first production migration, inspect the database and confirm that the migration draft matches the new project's intended schema.
+Supabase Preview Branches are not required.
+
+The existing project contains a logical multi-tenant demo business:
+- `irkop_cell_businesses.is_demo = true`
+- all demo rows are scoped by `business_id`
+- anonymous users may read only rows belonging to the demo business
+- public demo writes are not allowed
+
+Run `seed/irkop_cell_demo_seed.sql` manually in the Supabase SQL Editor after at least one Supabase Auth user exists. The seed skips automatically if a demo business already exists.
+
+Never run demo seed data automatically against a customer tenant.
