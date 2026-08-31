@@ -95,7 +95,42 @@ class _CashierPageState extends State<CashierPage> {
     );
   }
 
-  Future<void> _pickCustomer() async {if(widget.businessId==null)return;final list=await _customers.loadCustomers(widget.businessId!);if(!mounted)return;final x=await showModalBottomSheet<Customer>(context:context,builder:(c)=>SafeArea(child:ListView(children:[ListTile(title:const Text('Pelanggan'),subtitle:const Text('Pilih pelanggan untuk transaksi'),trailing:TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Lepaskan')),...list.map((v)=>ListTile(title:Text(v.name),subtitle:Text(v.phone??'Tanpa nomor'),onTap:()=>Navigator.pop(c,v)))])));if(x!=null&&mounted)setState(()=>_customer=x);}
+  Future<void> _pickCustomer() async {
+    final businessId = widget.businessId;
+    if (businessId == null) return;
+
+    final customers = await _customers.loadCustomers(businessId);
+    if (!mounted) return;
+
+    final selected = await showModalBottomSheet<Customer>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          children: [
+            ListTile(
+              title: const Text('Pelanggan'),
+              subtitle: const Text('Pilih pelanggan untuk transaksi'),
+              trailing: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Lepaskan'),
+              ),
+            ),
+            ...customers.map(
+              (customer) => ListTile(
+                title: Text(customer.name),
+                subtitle: Text(customer.phone ?? 'Tanpa nomor'),
+                onTap: () => Navigator.pop(context, customer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (selected != null && mounted) {
+      setState(() => _customer = selected);
+    }
+  }
 
   Future<void> _pay(NumberFormat currency) async {
     if(_cart.isEmpty||widget.businessId==null||widget.outletId==null)return;
