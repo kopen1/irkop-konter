@@ -41,8 +41,13 @@ jobs:
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
 
-      - name: Write deployment marker
-        run: echo "${{ github.sha }}" > build/web/BUILD_COMMIT.txt
+      - name: Cache-bust deployed web files
+        run: |
+          SHA="${{ github.sha }}"
+          mv build/web/main.dart.js "build/web/main.${SHA}.dart.js"
+          sed -i "s/main\.dart\.js/main.${SHA}.dart.js/g" build/web/flutter_bootstrap.js
+          sed -i "s#flutter_bootstrap\.js#flutter_bootstrap.js?v=${SHA}#g" build/web/index.html
+          echo "${SHA}" > build/web/BUILD_COMMIT.txt
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
