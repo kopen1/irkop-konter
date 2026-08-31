@@ -9,6 +9,7 @@ import '../customers/customers_page.dart';
 import '../reports/reports_page.dart';
 import '../settings/settings_page.dart';
 import '../more/more_page.dart';
+import '../credits/credits_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key,required this.demoMode,this.businessContext});
@@ -27,14 +28,17 @@ class _HomePageState extends State<HomePage>{
    ProductsPage(businessId:ctx?.businessId),
    CustomersPage(businessId:ctx?.businessId),
    ReportsPage(businessId:ctx?.businessId),
+   CreditsPage(businessId:ctx?.businessId),
+   _InfoPage(title:'Outlet',subtitle:ctx?.outletName??'Mode Demo',icon:Icons.storefront_outlined),
+   const _InfoPage(title:'Perangkat',subtitle:'Persiapan slot & lisensi',icon:Icons.devices_outlined),
    SettingsPage(businessContext:ctx),
   ];
   final compactIndex=index<=2?index:3;
-  final body=index==7?MorePage(onOpen:_open):pages[index];
+  final body=index==10?MorePage(onOpen:_open):pages[index];
   return Scaffold(
    appBar:AppBar(title:Text(index==0?'IRKOP CELL':ctx==null?'MODE DEMO':ctx.outletName),centerTitle:false),
    body:body,
-   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=7);}else{setState(()=>index=value);}},destinations:const[
+   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=10);}else{setState(()=>index=value);}},destinations:const[
     NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Beranda'),
     NavigationDestination(icon:Icon(Icons.point_of_sale_outlined),selectedIcon:Icon(Icons.point_of_sale),label:'Kasir'),
     NavigationDestination(icon:Icon(Icons.receipt_long_outlined),selectedIcon:Icon(Icons.receipt_long),label:'Transaksi'),
@@ -64,3 +68,4 @@ class _DashboardState extends State<_Dashboard>{
  ...m.recentTransactions.map((t)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.receipt)),title:Text(t.transactionNo),subtitle:Text('${t.paymentMethod} • ${t.status}'),trailing:Text(c.format(t.total),style:const TextStyle(fontWeight:FontWeight.bold))))),
  ]);}));}}
 class _MetricCard extends StatelessWidget{const _MetricCard({required this.icon,required this.label,required this.value});final IconData icon;final String label,value;@override Widget build(BuildContext context)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[CircleAvatar(radius:18,child:Icon(icon,size:19)),const Spacer(),Text(label,style:Theme.of(context).textTheme.labelLarge),const SizedBox(height:4),Text(value,style:const TextStyle(fontSize:17,fontWeight:FontWeight.w800))])));}
+class _InfoPage extends StatelessWidget{const _InfoPage({required this.title,required this.subtitle,required this.icon});final String title,subtitle;final IconData icon;@override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(24),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[CircleAvatar(radius:28,child:Icon(icon,size:30)),const SizedBox(height:18),Text(title,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:8),Text(subtitle),const SizedBox(height:8),const Text('Bagian ini sudah disiapkan sebagai halaman web. Pengelolaan detail dapat ditambahkan tanpa mengubah navigasi utama.')]))]);}
