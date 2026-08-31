@@ -1,4 +1,4 @@
-name: Deploy Flutter Web to GitHub Pages
+name: Build Flutter Web
 
 on:
   push:
@@ -7,13 +7,8 @@ on:
       - 'planning/**'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
+  group: web-build
   cancel-in-progress: false
 
 jobs:
@@ -36,18 +31,3 @@ jobs:
           flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
-      - name: Write deployment marker
-        run: echo "${{ github.sha }}" > build/web/BUILD_COMMIT.txt
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: flutter_app/build/web
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
