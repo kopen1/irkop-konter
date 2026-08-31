@@ -23,7 +23,7 @@ class _OutletsPageState extends State<OutletsPage> {
         const SizedBox(height:12),
         SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Tambah Outlet')))
       ])));
-    if(saved==true&&controller.text.trim().isNotEmpty){await _repo.create(businessId:businessId,name:controller.text);await _refresh();}
+    if(saved==true&&controller.text.trim().isNotEmpty){try{await _repo.create(businessId:businessId,name:controller.text);await _refresh();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Outlet ditambahkan.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal menambah outlet: '+e.toString())));}}
     controller.dispose();
   }
   @override Widget build(BuildContext context)=>RefreshIndicator(
@@ -43,7 +43,7 @@ class _OutletsPageState extends State<OutletsPage> {
             value:outlet.active,
             title:Text(outlet.name),
             subtitle:Text(outlet.active?'Aktif':'Nonaktif'),
-            onChanged:(value)async{final businessId=widget.businessId;if(businessId==null)return;await _repo.setActive(id:outlet.id,businessId:businessId,active:value);await _refresh();}
+            onChanged:(value)async{final businessId=widget.businessId;if(businessId==null)return;try{await _repo.setActive(id:outlet.id,businessId:businessId,active:value);await _refresh();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal mengubah status: '+e.toString())));}}
           )))
         ],
       ),
