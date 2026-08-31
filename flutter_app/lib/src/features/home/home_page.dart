@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage>{
   final compactIndex=index<=2?index:3;
   final body=index==10?MorePage(onOpen:_open):pages[index];
   return Scaffold(
-   appBar:AppBar(title:Text(index==0?'IRKOP CELL':ctx==null?'MODE DEMO':ctx.outletName),centerTitle:false),
+   appBar:AppBar(title:Text('${index==0?'IRKOP CELL':ctx==null?'MODE DEMO':ctx.outletName} • v0831-101'),centerTitle:false),
    body:body,
    bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=10);}else{setState(()=>index=value);}},destinations:const[
     NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Beranda'),
