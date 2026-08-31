@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage>{
    CustomersPage(businessId:ctx?.businessId),
    ReportsPage(businessId:ctx?.businessId),
    CreditsPage(businessId:ctx?.businessId),
-   _InfoPage(title:'Outlet',subtitle:ctx?.outletName??'Mode Demo',icon:Icons.storefront_outlined),
+   _InfoPage(title:'Outlet Aktif',subtitle:(ctx?.businessName??'IRKOP Demo')+' • '+(ctx?.outletName??'Mode Demo'),icon:Icons.storefront_outlined),
    const _InfoPage(title:'Perangkat',subtitle:'Persiapan slot & lisensi',icon:Icons.devices_outlined),
    SettingsPage(businessContext:ctx),
   ];

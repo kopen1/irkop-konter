@@ -108,7 +108,7 @@ class _CashierPageState extends State<CashierPage> {
         ),
       ),
     );
-    if(method==null||!mounted)return;
+    if(method==null||!mounted)return;final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Konfirmasi pembayaran'),content:Text('Metode: '+method+'\nTotal: '+currency.format(_cart.fold<double>(0,(s,i)=>s+i.subtotal))),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Konfirmasi'))]));if(ok!=true||!mounted)return;
     setState(()=>_paying=true);
     final total=_cart.fold<double>(0,(s,i)=>s+i.subtotal);
     try{
@@ -121,7 +121,7 @@ class _CashierPageState extends State<CashierPage> {
       if(!mounted)return;
       setState(()=>_cart.clear());
       _future=_products.loadProducts(widget.businessId!);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Pembayaran berhasil • '+currency.format(total))));
+      await showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Pembayaran berhasil'),content:Text('Total '+currency.format(total)+'\nStok telah diperbarui.'),actions:[FilledButton(onPressed:()=>Navigator.pop(c),child:const Text('Selesai'))]));
     }catch(e){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Pembayaran gagal: '+e.toString())));
     }finally{
