@@ -38,11 +38,11 @@ class _HomePageState extends State<HomePage>{
    ExpensesPage(businessId:ctx?.businessId),
   ];
   final compactIndex=index<=2?index:3;
-  final body=index==10?MorePage(onOpen:_open):pages[index];
+  final body=index==12?MorePage(onOpen:_open):pages[index];
   return Scaffold(
    appBar:AppBar(title:Text('${index==0?'IRKOP CELL':ctx==null?'MODE DEMO':ctx.outletName}'),centerTitle:false),
    body:body,
-   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=10);}else{setState(()=>index=value);}},destinations:const[
+   bottomNavigationBar:NavigationBar(selectedIndex:compactIndex,onDestinationSelected:(value){if(value==3){setState(()=>index=12);}else{setState(()=>index=value);}},destinations:const[
     NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Beranda'),
     NavigationDestination(icon:Icon(Icons.point_of_sale_outlined),selectedIcon:Icon(Icons.point_of_sale),label:'Kasir'),
     NavigationDestination(icon:Icon(Icons.receipt_long_outlined),selectedIcon:Icon(Icons.receipt_long),label:'Transaksi'),
