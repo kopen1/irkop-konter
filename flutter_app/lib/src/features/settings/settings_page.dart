@@ -1,18 +1,375 @@
 import 'package:flutter/material.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/data/business_context_repository.dart';
-import '../../shared/irkop_ui.dart';
-class SettingsPage extends StatelessWidget{const SettingsPage({super.key,this.businessContext});final BusinessContext? businessContext;@override Widget build(BuildContext context){final ctx=businessContext;return ListView(padding:const EdgeInsets.all(16),children:[
- const IrkopSectionHeader(eyebrow:'Bisnis',title:'Pengaturan',subtitle:'Kelola informasi bisnis dan akses aplikasi.',icon:Icons.settings_outlined,action:'Owner control'),
- const SizedBox(height:18),
- Card(child:Column(children:[
- ListTile(leading:const Icon(Icons.business_outlined),title:Text(ctx?.businessName??'IRKOP Demo'),subtitle:const Text('Nama bisnis')),
- const Divider(height:1),ListTile(leading:const Icon(Icons.storefront_outlined),title:Text(ctx?.outletName??'Mode Demo'),subtitle:const Text('Outlet aktif')),
- ])),
- const SizedBox(height:12),
- Card(child:Column(children:[
- const ListTile(leading:Icon(Icons.devices_outlined),title:Text('Perangkat & Slot'),subtitle:Text('Persiapan untuk sistem lisensi')),
- const Divider(height:1),const ListTile(leading:Icon(Icons.cloud_outlined),title:Text('Koneksi Database'),subtitle:Text('Supabase')),
- ])),
- const SizedBox(height:18),if(businessContext!=null)FilledButton.tonalIcon(onPressed:()=>AuthRepository().signOut(),icon:const Icon(Icons.logout),label:const Text('Keluar dari akun')),
- ]);}}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key, this.businessContext});
+  final BusinessContext? businessContext;
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+  late final TextEditingController _businessName;
+  late final TextEditingController _address;
+  late final TextEditingController _header;
+  late final TextEditingController _footer;
+  bool _autoInput = true;
+  bool _darkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 4, vsync: this);
+    _businessName = TextEditingController(
+      text: widget.businessContext?.businessName ?? 'IRKOP KONTER',
+    );
+    _address = TextEditingController(text: 'Alamat toko belum diatur');
+    _header = TextEditingController(text: 'TERIMA KASIH ATAS KUNJUNGAN ANDA');
+    _footer = TextEditingController(text: 'Semoga harimu menyenangkan!');
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    _businessName.dispose();
+    _address.dispose();
+    _header.dispose();
+    _footer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Pengaturan',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            )),
+                    const SizedBox(height: 3),
+                    const Text('Kontrol bisnis, akses dan sistem'),
+                  ],
+                ),
+              ),
+              const CircleAvatar(child: Icon(Icons.tune_rounded)),
+            ],
+          ),
+        ),
+        TabBar(
+          controller: _tabs,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          tabs: const [
+            Tab(text: 'Umum'),
+            Tab(text: 'NotifHook'),
+            Tab(text: 'Akun & Akses'),
+            Tab(text: 'Audit'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              _generalTab(),
+              _notifHookTab(),
+              _accountsTab(),
+              _auditTab(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _generalTab() => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _section('Informasi toko', Icons.storefront_outlined),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _businessName,
+            decoration: const InputDecoration(labelText: 'Nama bisnis'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _address,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: 'Alamat toko'),
+          ),
+          const SizedBox(height: 20),
+          _section('Tampilan aplikasi', Icons.palette_outlined),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Mode gelap'),
+                  subtitle: const Text('Preferensi tampilan perangkat'),
+                  value: _darkMode,
+                  onChanged: (value) => setState(() => _darkMode = value),
+                ),
+                const Divider(height: 1),
+                const ListTile(
+                  leading: Icon(Icons.phone_android_outlined),
+                  title: Text('Fokus Mobile'),
+                  subtitle: Text('Tampilan dioptimalkan untuk layar kasir'),
+                  trailing: Icon(Icons.check_circle, color: Colors.green),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _section('Template struk', Icons.receipt_long_outlined),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _header,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: 'Header struk'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _footer,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: 'Footer struk'),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Perubahan tampilan disimpan di perangkat.')),
+            ),
+            icon: const Icon(Icons.save_outlined),
+            label: const Text('Simpan perubahan'),
+          ),
+        ],
+      );
+
+  Widget _notifHookTab() => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _section('NotifHook', Icons.hub_outlined),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Auto-input transaksi'),
+                  subtitle: const Text('Terima transaksi dari sumber notifikasi'),
+                  value: _autoInput,
+                  onChanged: (value) => setState(() => _autoInput = value),
+                ),
+                const Divider(height: 1),
+                const ListTile(
+                  leading: Icon(Icons.cloud_done_outlined),
+                  title: Text('Status'),
+                  subtitle: Text('Terhubung'),
+                  trailing: Icon(Icons.check_circle, color: Colors.green),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const TextField(
+            decoration: InputDecoration(
+              labelText: 'Endpoint webhook',
+              hintText: 'https://domain.com/webhook/irkop',
+            ),
+          ),
+          const SizedBox(height: 12),
+          const TextField(
+            obscureText: true,
+            decoration: InputDecoration(labelText: 'API key'),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            onPressed: () {},
+            icon: const Icon(Icons.refresh),
+            label: const Text('Generate ulang API key'),
+          ),
+          const SizedBox(height: 20),
+          _section('Sumber notifikasi', Icons.notifications_active_outlined),
+          const SizedBox(height: 10),
+          const Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.account_balance)),
+                  title: Text('Midtrans'),
+                  subtitle: Text('Pembayaran online'),
+                  trailing: Text('Aktif'),
+                ),
+                Divider(height: 1),
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.bolt_outlined)),
+                  title: Text('Xendit'),
+                  subtitle: Text('Payment gateway'),
+                  trailing: Text('Aktif'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah sumber'),
+          ),
+        ],
+      );
+
+  Widget _accountsTab() => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _section('Akun uang', Icons.account_balance_wallet_outlined),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: const [
+                _MoneyTile(icon: Icons.payments_outlined, name: 'Kas Tunai', type: 'Tunai', active: true),
+                Divider(height: 1),
+                _MoneyTile(icon: Icons.account_balance_outlined, name: 'Bank', type: 'Rekening', active: true),
+                Divider(height: 1),
+                _MoneyTile(icon: Icons.wallet_outlined, name: 'E-Wallet', type: 'Digital', active: true),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah akun uang'),
+          ),
+          const SizedBox(height: 22),
+          _section('User & permission', Icons.admin_panel_settings_outlined),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: const [
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.person)),
+                  title: Text('Admin'),
+                  subtitle: Text('Akses penuh'),
+                  trailing: Chip(label: Text('Aktif')),
+                ),
+                Divider(height: 1),
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.person_outline)),
+                  title: Text('Kasir'),
+                  subtitle: Text('Kasir & transaksi'),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            label: const Text('Tambah user'),
+          ),
+        ],
+      );
+
+  Widget _auditTab() => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _section('Log aktivitas', Icons.history_outlined),
+          const SizedBox(height: 12),
+          const Card(
+            child: Column(
+              children: [
+                _AuditTile('Admin', 'Mengubah pengaturan bisnis', 'Hari ini • 14:21'),
+                Divider(height: 1),
+                _AuditTile('Kasir', 'Menyelesaikan transaksi', 'Hari ini • 13:50'),
+                Divider(height: 1),
+                _AuditTile('Admin', 'Memperbarui produk', 'Hari ini • 11:05'),
+                Divider(height: 1),
+                _AuditTile('Sistem', 'Sinkronisasi database', 'Hari ini • 09:12'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.filter_alt_outlined),
+            label: const Text('Filter log'),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.tonalIcon(
+            onPressed: () => AuthRepository().signOut(),
+            icon: const Icon(Icons.logout),
+            label: const Text('Keluar dari akun'),
+          ),
+        ],
+      );
+
+  Widget _section(String title, IconData icon) => Row(
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      );
+}
+
+class _MoneyTile extends StatelessWidget {
+  const _MoneyTile({
+    required this.icon,
+    required this.name,
+    required this.type,
+    required this.active,
+  });
+  final IconData icon;
+  final String name;
+  final String type;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        leading: CircleAvatar(child: Icon(icon)),
+        title: Text(name),
+        subtitle: Text(type),
+        trailing: Text(
+          active ? 'Aktif' : 'Nonaktif',
+          style: TextStyle(
+            color: active ? Colors.green : Theme.of(context).colorScheme.error,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+}
+
+class _AuditTile extends StatelessWidget {
+  const _AuditTile(this.user, this.action, this.time);
+  final String user;
+  final String action;
+  final String time;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+        ),
+        title: Text(action, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text('$user • $time'),
+        trailing: const Icon(Icons.chevron_right),
+      );
+}
