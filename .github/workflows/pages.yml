@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths-ignore:
       - 'planning/**'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -39,9 +40,11 @@ jobs:
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
 
-      - name: Deploy to GitHub Pages
+      - name: Publish to master/docs
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: master
           publish_dir: ./flutter_app/build/web
-          publish_branch: gh-pages
+          destination_dir: docs
+          keep_files: true
