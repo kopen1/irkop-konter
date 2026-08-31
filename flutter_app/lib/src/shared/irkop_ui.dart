@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class IrkopSectionHeader extends StatelessWidget {
-  const IrkopSectionHeader({super.key,required this.eyebrow,required this.title,required this.subtitle,required this.icon,required this.action});
-  final String eyebrow,title,subtitle,action; final IconData icon;
+  const IrkopSectionHeader({super.key,required this.eyebrow,required this.title,required this.subtitle,required this.icon,required this.action,this.onAction});
+  final String eyebrow,title,subtitle,action; final IconData icon; final VoidCallback? onAction;
   @override Widget build(BuildContext context)=>Container(
     width:double.infinity,padding:const EdgeInsets.all(20),
     decoration:BoxDecoration(borderRadius:BorderRadius.circular(24),color:Theme.of(context).colorScheme.primaryContainer),
@@ -10,7 +10,7 @@ class IrkopSectionHeader extends StatelessWidget {
       Row(children:[CircleAvatar(child:Icon(icon)),const SizedBox(width:10),Expanded(child:Text(eyebrow.toUpperCase(),style:Theme.of(context).textTheme.labelMedium))]),
       const SizedBox(height:18),Text(title,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),
       const SizedBox(height:6),Text(subtitle),const SizedBox(height:16),
-      Align(alignment:Alignment.centerLeft,child:FilledButton.tonal(onPressed:null,child:Text(action))),
+      Align(alignment:Alignment.centerLeft,child:FilledButton.tonal(onPressed:onAction,child:Text(action))),
     ]),
   );
 }
