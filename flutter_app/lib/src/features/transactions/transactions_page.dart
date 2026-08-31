@@ -108,6 +108,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     onTap: () => _showDetails(item),
+                    onLongPress: item.status=='completed'?()=>_void(item):null,
                   ),
                 ),
               ),
@@ -117,6 +118,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
       ),
     );
   }
+
+  Future<void> _void(TransactionSummary t) async {final c=TextEditingController();final ok=await showDialog<bool>(context:context,builder:(x)=>AlertDialog(title:const Text('Void transaksi?'),content:TextField(controller:c,decoration:const InputDecoration(labelText:'Alasan void')),actions:[TextButton(onPressed:()=>Navigator.pop(x,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(x,true),child:const Text('Void'))]));if(ok==true){try{await _repo.voidTransaction(id:t.id,businessId:widget.businessId!,reason:c.text);await _refresh();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Transaksi berhasil di-void.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal void: '+e.toString())));}}c.dispose();}
 
   Future<void> _showDetails(TransactionSummary transaction) async {
     List<TransactionItemSummary> items;

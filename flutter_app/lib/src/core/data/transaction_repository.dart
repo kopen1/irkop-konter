@@ -32,7 +32,7 @@ class TransactionRepository {
     final clean=reason.trim();
     if(clean.isEmpty)throw StateError('Alasan void wajib diisi.');
     await _client.from('irkop_cell_transaction_void_audit').insert({'transaction_id':id,'business_id':businessId,'reason':clean});
-    await _client.from('irkop_cell_transactions').update({'status':'void'}).eq('id',id).eq('business_id',businessId).eq('status','completed');
+    final updated=await _client.from('irkop_cell_transactions').update({'status':'void'}).eq('id',id).eq('business_id',businessId).eq('status','completed').select('id');if(updated.isEmpty)throw StateError('Transaksi tidak dapat di-void.');
   }
   Future<DashboardMetrics> loadDashboard(String businessId) async {
     final transactions=await loadTransactions(businessId);
