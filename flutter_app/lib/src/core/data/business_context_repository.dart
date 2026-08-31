@@ -17,11 +17,12 @@ class BusinessContext {
 class BusinessContextRepository {
   final SupabaseClient _client = Supabase.instance.client;
 
+  bool _missingOutletActive(PostgrestException e) =>
+      e.code == '42703' || e.code == 'PGRST204';
+
   Future<BusinessContext> ensureForCurrentUser() async {
     final user = _client.auth.currentUser;
-    if (user == null) {
-      throw StateError('User belum login.');
-    }
+    if (user == null) throw StateError('User belum login.');
 
     var business = await _client
         .from('irkop_cell_businesses')
@@ -40,14 +41,26 @@ class BusinessContextRepository {
         .select('id,name')
         .single();
 
-    var outlet = await _client
-        .from('irkop_cell_outlets')
-        .select('id,name')
-        .eq('business_id', business['id'])
-        .eq('is_active', true)
-        .order('created_at')
-        .limit(1)
-        .maybeSingle();
+    Map<String, dynamic>? outlet;
+    try {
+      outlet = await _client
+          .from('irkop_cell_outlets')
+          .select('id,name')
+          .eq('business_id', business['id'])
+          .eq('is_active', true)
+          .order('created_at')
+          .limit(1)
+          .maybeSingle();
+    } on PostgrestException catch (e) {
+      if (!_missingOutletActive(e)) rethrow;
+      outlet = await _client
+          .from('irkop_cell_outlets')
+          .select('id,name')
+          .eq('business_id', business['id'])
+          .order('created_at')
+          .limit(1)
+          .maybeSingle();
+    }
 
     outlet ??= await _client
         .from('irkop_cell_outlets')

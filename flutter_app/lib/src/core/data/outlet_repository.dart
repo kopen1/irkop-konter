@@ -14,6 +14,8 @@ class OutletRecord {
 class OutletRepository {
   final SupabaseClient _client=Supabase.instance.client;
 
+  bool _missingIsActive(PostgrestException e)=>e.code=='42703'||e.code=='PGRST204';
+
   Future<List<OutletRecord>> load(String businessId) async {
     if(!Env.isSupabaseConfigured)return const [];
     try {
@@ -24,35 +26,31 @@ class OutletRepository {
           .order('created_at');
       return rows.map<OutletRecord>((r)=>OutletRecord.fromMap(r)).toList();
     } on PostgrestException catch (e) {
-      // Keep existing databases usable until the is_active migration is applied.
-      if(e.code=='42703') {
-        final rows=await _client
-            .from('irkop_cell_outlets')
-            .select('id,name')
-            .eq('business_id',businessId)
-            .order('created_at');
-        return rows.map<OutletRecord>((r)=>OutletRecord(
-          id:r['id'] as String,
-          name:r['name'] as String,
-          active:true,
-        )).toList();
-      }
-      rethrow;
+      if(!_missingIsActive(e)) rethrow;
+      final rows=await _client
+          .from('irkop_cell_outlets')
+          .select('id,name')
+          .eq('business_id',businessId)
+          .order('created_at');
+      return rows.map<OutletRecord>((r)=>OutletRecord(
+        id:r['id'] as String,
+        name:r['name'] as String,
+        active:true,
+      )).toList();
     }
   }
 
   Future<void> create({required String businessId,required String name}) async {
     if(name.trim().isEmpty)throw StateError('Nama outlet wajib diisi.');
-    final payload={
-      'business_id':businessId,
-      'name':name.trim(),
-      'timezone':'Asia/Jakarta',
-      'is_active':true,
-    };
     try {
-      await _client.from('irkop_cell_outlets').insert(payload);
+      await _client.from('irkop_cell_outlets').insert({
+        'business_id':businessId,
+        'name':name.trim(),
+        'timezone':'Asia/Jakarta',
+        'is_active':true,
+      });
     } on PostgrestException catch (e) {
-      if(e.code!='42703') rethrow;
+      if(!_missingIsActive(e)) rethrow;
       await _client.from('irkop_cell_outlets').insert({
         'business_id':businessId,
         'name':name.trim(),
@@ -73,8 +71,8 @@ class OutletRepository {
           .eq('id',id)
           .eq('business_id',businessId);
     } on PostgrestException catch (e) {
-      if(e.code=='42703') {
-        throw StateError('Kolom status outlet belum tersedia. Jalankan migration 20260831000400_add_outlet_is_active.sql.');
+      if(_missingIsActive(e)) {
+        throw StateError('Status aktif outlet belum tersedia di database.');
       }
       rethrow;
     }
