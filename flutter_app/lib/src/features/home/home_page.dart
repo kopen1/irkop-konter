@@ -10,6 +10,7 @@ import '../reports/reports_page.dart';
 import '../settings/settings_page.dart';
 import '../more/more_page.dart';
 import '../credits/credits_page.dart';
+import '../devices/devices_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key,required this.demoMode,this.businessContext});
@@ -30,7 +31,7 @@ class _HomePageState extends State<HomePage>{
    ReportsPage(businessId:ctx?.businessId),
    CreditsPage(businessId:ctx?.businessId),
    _InfoPage(title:'Outlet Aktif',subtitle:(ctx?.businessName??'IRKOP Demo')+' • '+(ctx?.outletName??'Mode Demo'),icon:Icons.storefront_outlined),
-   const _InfoPage(title:'Perangkat',subtitle:'Persiapan slot & lisensi',icon:Icons.devices_outlined),
+   DevicesPage(businessId:ctx?.businessId),
    SettingsPage(businessContext:ctx),
   ];
   final compactIndex=index<=2?index:3;

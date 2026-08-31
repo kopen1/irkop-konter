@@ -43,9 +43,9 @@
 - [ ] Multi-outlet
 
 ## 07 Perangkat
-- [ ] Device slot
-- [ ] Aktivasi/nonaktifkan perangkat
-- [ ] Status perangkat
+- [x] Device slot dasar
+- [x] Aktivasi/nonaktifkan perangkat
+- [x] Status perangkat
 
 ## 08 UX dan Stabilitas
 - [ ] Loading/empty/error konsisten
