@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <script src="flutter_bootstrap.js?v=c05b54f44a32a9696e4ef8761a20cb364f3f0641" async></script>
+  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister())); }</script>
+  <script src="flutter_bootstrap.js?v=8d358bf4e88c91c041beea66db2144aaf2e41e4c" async></script>
 </body>
 </html>
