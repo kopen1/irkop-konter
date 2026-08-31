@@ -38,13 +38,3 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
       - name: Write deployment marker
         run: echo "${{ github.sha }}" > build/web/BUILD_COMMIT.txt
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
