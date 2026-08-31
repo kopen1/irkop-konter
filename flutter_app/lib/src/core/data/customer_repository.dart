@@ -25,7 +25,18 @@ class CustomerRepository {
     final normalized=phone?.trim();
     return _client.from('irkop_cell_customers').update({'name':name.trim(),'phone':normalized==null||normalized.isEmpty?null:normalized}).eq('id',id).eq('business_id',businessId);
   }
-  Future<void> deleteCustomer({required String id,required String businessId})=>_client.from('irkop_cell_customers').delete().eq('id',id).eq('business_id',businessId);
+  Future<void> deleteCustomer({required String id,required String businessId}) async {
+    // Keep historical transactions, but detach the customer before deletion.
+    // This also works with databases whose legacy FK was created as RESTRICT.
+    await _client.from('irkop_cell_transactions')
+      .update({'customer_id':null})
+      .eq('business_id',businessId)
+      .eq('customer_id',id);
+    await _client.from('irkop_cell_customers')
+      .delete()
+      .eq('id',id)
+      .eq('business_id',businessId);
+  }
   Future<List<TransactionSummary>> history({required String businessId,required String customerId}) async {
     if(!Env.isSupabaseConfigured)return const [];
     final rows=await _client.from('irkop_cell_transactions').select('id,transaction_no,payment_method,status,total,transaction_at').eq('business_id',businessId).eq('customer_id',customerId).order('transaction_at',ascending:false);
