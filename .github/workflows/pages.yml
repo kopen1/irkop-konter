@@ -7,6 +7,9 @@ on:
       - 'planning/**'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: web-build
   cancel-in-progress: false
@@ -42,3 +45,9 @@ jobs:
           else
             echo "Direct build succeeded using restored cache."
           fi
+      - name: Deploy web directly to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./flutter_app/build/web
+          publish_branch: gh-pages
