@@ -139,7 +139,7 @@ class _CashierPageState extends State<CashierPage> {
         const SizedBox(height:5),
         Text('Mulai Penjualan',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),
         const SizedBox(height:4),
-        Text(_cart.fold<int>(0,(sum,item)=>sum+item.qty).toString()+' item di keranjang • '+currency.format(total)),
+        Text(_cart.fold<double>(0,(sum,item)=>sum+item.qty).toStringAsFixed(0)+' item di keranjang • '+currency.format(total)),
       ]))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari produk untuk dijual',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v))),
       const SizedBox(height:8),
@@ -173,7 +173,7 @@ class _CashierPageState extends State<CashierPage> {
           child:OutlinedButton.icon(
             onPressed:()=>_showCart(currency),
             icon:const Icon(Icons.shopping_cart_outlined),
-            label:Text('Lihat Keranjang • '+_cart.fold<int>(0,(sum,item)=>sum+item.qty).toString()+' item'),
+            label:Text('Lihat Keranjang • '+_cart.fold<double>(0,(sum,item)=>sum+item.qty).toStringAsFixed(0)+' item'),
           ),
         ),
       Container(padding:const EdgeInsets.fromLTRB(16,12,16,20),child:Row(children:[
