@@ -24,10 +24,21 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Get dependencies
-        run: flutter pub get
       - name: Build Flutter Web
         run: |
+          set +e
           flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          BUILD_STATUS=$?
+          set -e
+
+          if [ $BUILD_STATUS -ne 0 ]; then
+            echo "Direct build failed. Restoring dependencies with flutter pub get..."
+            flutter pub get
+            flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
+              --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+              --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          else
+            echo "Direct build succeeded using restored cache."
+          fi
