@@ -45,11 +45,6 @@ jobs:
           else
             echo "Direct build succeeded using restored cache."
           fi
-      - name: Cache-bust Flutter web runtime and remove stale service workers
-        run: |
-          sed -i "s/flutter_bootstrap.js/flutter_bootstrap.js?v=${GITHUB_SHA}/g" build/web/index.html
-          sed -i 's/"mainJsPath":"main.dart.js"/"mainJsPath":"main.dart.js?v='"'"'${GITHUB_SHA}'"'"'"/g' build/web/flutter_bootstrap.js
-          sed -i '/<body>/a\  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister())); }</script>' build/web/index.html
       - name: Deploy web directly to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
