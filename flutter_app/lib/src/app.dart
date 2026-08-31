@@ -12,5 +12,11 @@ class IrkopCellApp extends StatelessWidget {
       useMaterial3: true,
     ),
     home: const AuthGate(),
+    builder: (context, child) => ScrollConfiguration(behavior: const _NoGlowScrollBehavior(), child: child!),
   );
+}
+
+class _NoGlowScrollBehavior extends MaterialScrollBehavior {
+  const _NoGlowScrollBehavior();
+  @override Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
 }
