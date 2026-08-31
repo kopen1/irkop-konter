@@ -1,0 +1,2 @@
+import '../models/business_models.dart';
+class DemoStore { static final products=<Product>[const Product(id:'p1',name:'Pulsa Telkomsel 20K',category:'Pulsa',price:22000,stock:99),const Product(id:'p2',name:'Pulsa Indosat 50K',category:'Pulsa',price:52000,stock:87),const Product(id:'p3',name:'Kabel USB-C Fast Charge',category:'Aksesoris',price:35000,stock:24),const Product(id:'p4',name:'Charger 20W',category:'Aksesoris',price:95000,stock:16),const Product(id:'p5',name:'Jasa Service Ringan',category:'Service',price:75000,stock:999)]; }
