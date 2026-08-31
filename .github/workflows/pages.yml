@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths-ignore:
       - 'planning/**'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -22,11 +23,13 @@ jobs:
         working-directory: flutter_app
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
           pub-cache: true
+
       - name: Build Flutter Web
         run: |
           set +e
@@ -43,11 +46,24 @@ jobs:
               --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
               --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           else
-            echo "Direct build succeeded using restored cache."
+            echo "Direct build succeeded using cache."
           fi
-      - name: Deploy web directly to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./flutter_app/build/web
-          publish_branch: gh-pages
+
+      - name: Publish build to master/docs
+        working-directory: .
+        run: |
+          rm -rf docs
+          mkdir -p docs
+          cp -a flutter_app/build/web/. docs/
+          touch docs/.nojekyll
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+
+          if git diff --cached --quiet; then
+            echo "No generated web changes to commit."
+          else
+            git commit -m "chore: publish web build to master/docs"
+            git push origin HEAD:master
+          fi
