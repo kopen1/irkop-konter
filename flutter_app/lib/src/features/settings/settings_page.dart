@@ -14,5 +14,5 @@ class SettingsPage extends StatelessWidget{const SettingsPage({super.key,this.bu
  const ListTile(leading:Icon(Icons.devices_outlined),title:Text('Perangkat & Slot'),subtitle:Text('Persiapan untuk sistem lisensi')),
  const Divider(height:1),const ListTile(leading:Icon(Icons.cloud_outlined),title:Text('Koneksi Database'),subtitle:Text('Supabase')),
  ])),
- const SizedBox(height:18),FilledButton.tonalIcon(onPressed:()=>AuthRepository().signOut(),icon:const Icon(Icons.logout),label:const Text('Keluar dari akun')),
+ const SizedBox(height:18),if(businessContext!=null)FilledButton.tonalIcon(onPressed:()=>AuthRepository().signOut(),icon:const Icon(Icons.logout),label:const Text('Keluar dari akun')),
  ]);}}

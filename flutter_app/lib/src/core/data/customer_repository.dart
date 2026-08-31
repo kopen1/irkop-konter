@@ -15,11 +15,13 @@ class CustomerRepository {
     return rows.map<Customer>((row)=>Customer.fromMap(row)).toList();
   }
   Future<Customer> createCustomer({required String businessId,required String name,String? phone}) async {
+    if(name.trim().isEmpty)throw StateError('Nama pelanggan wajib diisi.');
     final normalized=phone?.trim();
     final row=await _client.from('irkop_cell_customers').insert({'business_id':businessId,'name':name.trim(),'phone':normalized==null||normalized.isEmpty?null:normalized}).select('id,name,phone').single();
     return Customer.fromMap(row);
   }
   Future<void> updateCustomer({required String id,required String businessId,required String name,String? phone}) {
+    if(name.trim().isEmpty)throw StateError('Nama pelanggan wajib diisi.');
     final normalized=phone?.trim();
     return _client.from('irkop_cell_customers').update({'name':name.trim(),'phone':normalized==null||normalized.isEmpty?null:normalized}).eq('id',id).eq('business_id',businessId);
   }

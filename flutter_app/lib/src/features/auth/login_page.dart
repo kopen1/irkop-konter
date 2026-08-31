@@ -24,12 +24,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _submit() async {
+    final email=_email.text.trim();
+    final password=_password.text;
+    if(!email.contains('@')){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Masukkan email yang valid.')));return;}
+    if(password.length<6){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Password minimal 6 karakter.')));return;}
     setState(() => _loading = true);
     try {
       if (_register) {
         await _auth.signUpWithEmail(
-          email: _email.text.trim(),
-          password: _password.text,
+          email: email,
+          password: password,
         );
       } else {
         await _auth.signInWithEmail(

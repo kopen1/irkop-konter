@@ -44,6 +44,7 @@ class BusinessContextRepository {
         .from('irkop_cell_outlets')
         .select('id,name')
         .eq('business_id', business['id'])
+        .eq('is_active', true)
         .order('created_at')
         .limit(1)
         .maybeSingle();

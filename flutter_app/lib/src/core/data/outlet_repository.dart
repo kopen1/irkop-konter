@@ -42,6 +42,7 @@ class OutletRepository {
   }
 
   Future<void> create({required String businessId,required String name}) async {
+    if(name.trim().isEmpty)throw StateError('Nama outlet wajib diisi.');
     final payload={
       'business_id':businessId,
       'name':name.trim(),
