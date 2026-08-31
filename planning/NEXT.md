@@ -1,17 +1,3 @@
-# NEXT — Urutan Pengerjaan
+# NEXT — Status Final Implementasi
 
-1. Kerjakan satu tahap lengkap.
-2. Implementasi masuk ke source aktif.
-3. Satu rangkaian perubahan = satu commit.
-4. Perubahan aplikasi memicu build Pages.
-5. Perubahan planning saja tidak memicu build Pages.
-
-## Fokus berikutnya: Produk
-- daftar produk
-- tambah
-- edit
-- hapus/nonaktifkan
-- stok dasar
-- pencarian
-
-Setelah selesai lanjut ke **Pelanggan**.
+Fitur utama yang ada pada scope aplikasi telah diimplementasikan di source aktif. Sisa verifikasi akhir dilakukan melalui build GitHub Actions dan audit Supabase migration/RLS sebelum produksi penuh.

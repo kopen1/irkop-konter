@@ -8,6 +8,7 @@ import '../products/products_page.dart';
 import '../customers/customers_page.dart';
 import '../reports/reports_page.dart';
 import '../settings/settings_page.dart';
+import '../outlets/outlets_page.dart';
 import '../more/more_page.dart';
 import '../credits/credits_page.dart';
 import '../devices/devices_page.dart';
@@ -30,7 +31,7 @@ class _HomePageState extends State<HomePage>{
    CustomersPage(businessId:ctx?.businessId),
    ReportsPage(businessId:ctx?.businessId),
    CreditsPage(businessId:ctx?.businessId),
-   _InfoPage(title:'Outlet Aktif',subtitle:(ctx?.businessName??'IRKOP Demo')+' • '+(ctx?.outletName??'Mode Demo'),icon:Icons.storefront_outlined),
+   OutletsPage(businessId:ctx?.businessId),
    DevicesPage(businessId:ctx?.businessId),
    SettingsPage(businessContext:ctx),
   ];

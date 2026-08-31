@@ -28,6 +28,12 @@ class TransactionRepository {
     final rows=await _client.from('irkop_cell_transaction_items').select('product_name,qty,unit_price,subtotal').eq('transaction_id',transactionId).order('created_at');
     return rows.map<TransactionItemSummary>((r)=>TransactionItemSummary.fromMap(r)).toList();
   }
+  Future<void> voidTransaction({required String id,required String businessId,required String reason}) async {
+    final clean=reason.trim();
+    if(clean.isEmpty)throw StateError('Alasan void wajib diisi.');
+    await _client.from('irkop_cell_transaction_void_audit').insert({'transaction_id':id,'business_id':businessId,'reason':clean});
+    await _client.from('irkop_cell_transactions').update({'status':'void'}).eq('id',id).eq('business_id',businessId).eq('status','completed');
+  }
   Future<DashboardMetrics> loadDashboard(String businessId) async {
     final transactions=await loadTransactions(businessId);
     final now=DateTime.now(),today=DateTime(now.year,now.month,now.day);
