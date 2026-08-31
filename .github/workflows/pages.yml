@@ -5,12 +5,11 @@ on:
     branches: [master]
     paths-ignore:
       - 'planning/**'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -22,19 +21,33 @@ jobs:
     defaults:
       run:
         working-directory: flutter_app
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
           pub-cache: true
+
       - name: Get dependencies
         run: flutter pub get
+
       - name: Build Flutter Web
         run: |
           flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
-      - name: Write deployment marker
-        run: echo "${{ github.sha }}" > build/web/BUILD_COMMIT.txt
+
+      - name: Publish web build to master/docs
+        working-directory: .
+        run: |
+          rm -rf docs
+          mkdir -p docs
+          cp -R flutter_app/build/web/. docs/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "chore: publish web build"
+          git push origin HEAD:master
