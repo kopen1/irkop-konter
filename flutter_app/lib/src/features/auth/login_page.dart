@@ -42,10 +42,10 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(content: Text('Akun dibuat. Cek email jika konfirmasi diaktifkan.')),
         );
       }
-    } on AuthException catch (error) {
+    } on Exception catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
         );
       }
     } catch (_) {
