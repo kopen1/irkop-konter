@@ -1,55 +1,37 @@
-name: Deploy Flutter Web to GitHub Pages
+name: Build Flutter Web
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+    paths-ignore:
+      - 'planning/**'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: web-build
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
+          pub-cache: true
 
-      - name: Flutter Pub Get
+      - name: Get dependencies
         run: flutter pub get
 
-      - name: Flutter Analyze (non-blocking)
-        run: flutter analyze || true
-
-      - name: Configure Flutter Web
-        run: flutter create . --platforms web
-
       - name: Build Flutter Web
-        run: flutter build web --release --base-href "/irkop-konter/"
-
-  deploy:
-    environment:
-      name: pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-
-    needs: build
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/pages@v4
+        run: |
+          flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
