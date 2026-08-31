@@ -33,6 +33,65 @@ class _CashierPageState extends State<CashierPage> {
     });
   }
 
+  void _changeQty(Product product,int delta){
+    final index=_cart.indexWhere((x)=>x.product.id==product.id);
+    if(index<0)return;
+    setState((){
+      final next=_cart[index].qty+delta;
+      if(next<=0){_cart.removeAt(index);}else{_cart[index]=_cart[index].copyWith(qty:next);}
+    });
+  }
+
+  Future<void> _showCart(NumberFormat currency) async {
+    await showModalBottomSheet<void>(
+      context:context,
+      isScrollControlled:true,
+      builder:(sheetContext)=>SafeArea(
+        child:Padding(
+          padding:const EdgeInsets.fromLTRB(16,16,16,20),
+          child:StatefulBuilder(
+            builder:(context,setSheetState)=>Column(
+              mainAxisSize:MainAxisSize.min,
+              crossAxisAlignment:CrossAxisAlignment.start,
+              children:[
+                Row(children:[
+                  Expanded(child:Text('Keranjang Belanja',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800))),
+                  IconButton(onPressed:()=>Navigator.pop(context),icon:const Icon(Icons.close)),
+                ]),
+                const SizedBox(height:8),
+                if(_cart.isEmpty)
+                  const Padding(padding:EdgeInsets.all(24),child:Center(child:Text('Keranjang masih kosong.')))
+                else ...[
+                  ..._cart.map((item)=>ListTile(
+                    contentPadding:EdgeInsets.zero,
+                    title:Text(item.product.name,style:const TextStyle(fontWeight:FontWeight.w700)),
+                    subtitle:Text(currency.format(item.product.price)+' per item'),
+                    leading:IconButton(
+                      icon:const Icon(Icons.remove_circle_outline),
+                      onPressed:(){_changeQty(item.product,-1);setSheetState((){});},
+                    ),
+                    trailing:Row(mainAxisSize:MainAxisSize.min,children:[
+                      Text(item.qty.toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                      IconButton(
+                        icon:const Icon(Icons.add_circle_outline),
+                        onPressed:(){_changeQty(item.product,1);setSheetState((){});},
+                      ),
+                    ]),
+                  )),
+                  const Divider(),
+                  Row(children:[
+                    const Expanded(child:Text('Total',style:TextStyle(fontWeight:FontWeight.w800,fontSize:18))),
+                    Text(currency.format(_cart.fold<double>(0,(s,i)=>s+i.subtotal)),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:18)),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _pay(NumberFormat currency) async {
     if(_cart.isEmpty||widget.businessId==null||widget.outletId==null)return;
     final method=await showModalBottomSheet<String>(
@@ -80,7 +139,7 @@ class _CashierPageState extends State<CashierPage> {
         const SizedBox(height:5),
         Text('Mulai Penjualan',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),
         const SizedBox(height:4),
-        Text(_cart.length.toString()+' item di keranjang • '+currency.format(total)),
+        Text(_cart.fold<int>(0,(sum,item)=>sum+item.qty).toString()+' item di keranjang • '+currency.format(total)),
       ]))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:16),child:TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari produk untuk dijual',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v))),
       const SizedBox(height:8),
@@ -108,6 +167,15 @@ class _CashierPageState extends State<CashierPage> {
           },
         );
       })),
+      if(_cart.isNotEmpty)
+        Padding(
+          padding:const EdgeInsets.fromLTRB(16,0,16,4),
+          child:OutlinedButton.icon(
+            onPressed:()=>_showCart(currency),
+            icon:const Icon(Icons.shopping_cart_outlined),
+            label:Text('Lihat Keranjang • '+_cart.fold<int>(0,(sum,item)=>sum+item.qty).toString()+' item'),
+          ),
+        ),
       Container(padding:const EdgeInsets.fromLTRB(16,12,16,20),child:Row(children:[
         Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           const Text('Total Belanja'),
