@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'core/config/env.dart';
-import 'features/home/home_page.dart';
+import 'features/auth/auth_gate.dart';
 
 class IrkopCellApp extends StatelessWidget {
   const IrkopCellApp({super.key});
@@ -12,6 +11,6 @@ class IrkopCellApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0B1F3A), primary: const Color(0xFF0B1F3A), secondary: const Color(0xFFD4AF37)),
       useMaterial3: true,
     ),
-    home: HomePage(demoMode: !Env.isSupabaseConfigured),
+    home: const AuthGate(),
   );
 }
