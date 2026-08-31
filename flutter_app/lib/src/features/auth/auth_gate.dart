@@ -26,7 +26,7 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        if (!auth.isAuthenticated) {
+        if (snapshot.hasError || !auth.isAuthenticated) {
           return const LoginPage();
         }
 
@@ -52,7 +52,22 @@ class _BusinessBootstrapState extends State<_BusinessBootstrap> {
   @override
   void initState() {
     super.initState();
-    _future = _repository.ensureForCurrentUser();
+    _load();
+  }
+
+  void _load() {
+    _future = _repository
+        .ensureForCurrentUser()
+        .timeout(
+          const Duration(seconds: 20),
+          onTimeout: () => throw StateError(
+            'Koneksi ke database terlalu lama. Periksa jaringan lalu coba lagi.',
+          ),
+        );
+  }
+
+  void _retry() {
+    setState(_load);
   }
 
   @override
@@ -68,10 +83,46 @@ class _BusinessBootstrapState extends State<_BusinessBootstrap> {
 
         if (snapshot.hasError) {
           return Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 40),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Gagal menyiapkan bisnis',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: _retry,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Coba lagi'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final businessContext = snapshot.data;
+        if (businessContext == null) {
+          return Scaffold(
             body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text('Gagal menyiapkan bisnis: ${snapshot.error}'),
+              child: FilledButton.icon(
+                onPressed: _retry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Muat ulang'),
               ),
             ),
           );
@@ -79,7 +130,7 @@ class _BusinessBootstrapState extends State<_BusinessBootstrap> {
 
         return HomePage(
           demoMode: false,
-          businessContext: snapshot.data,
+          businessContext: businessContext,
         );
       },
     );
