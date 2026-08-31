@@ -64,6 +64,15 @@ class BusinessContextRepository {
     );
   }
 
+  Future<void> updateBusinessName({required String businessId, required String name}) async {
+    final value = name.trim();
+    if (value.isEmpty) throw StateError('Nama bisnis tidak boleh kosong.');
+    await _client
+        .from('irkop_cell_businesses')
+        .update({'name': value})
+        .eq('id', businessId);
+  }
+
   String _defaultBusinessName(String? email) {
     final prefix = (email ?? 'Owner').split('@').first.trim();
     return prefix.isEmpty ? 'Bisnis Saya' : '$prefix Store';
