@@ -3,9 +3,6 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches: [master]
-    paths:
-      - 'flutter_app/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
