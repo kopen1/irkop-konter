@@ -25,4 +25,28 @@ for token in   "irkop_cell_outlets"   "irkop_cell_devices"   "irkop_cell_credit_
   }
 done
 
+
+echo "Checking Supabase migration versions"
+declare -A seen_versions=()
+
+while IFS= read -r migration_file; do
+  filename="$(basename "$migration_file")"
+  version="${filename%%_*}"
+
+  if [[ -z "$version" || ! "$version" =~ ^[0-9]+$ ]]; then
+    echo "Invalid Supabase migration filename: $filename" >&2
+    exit 1
+  fi
+
+  if [[ -n "${seen_versions[$version]+x}" ]]; then
+    echo "Duplicate Supabase migration version: $version" >&2
+    echo "Conflicting files: ${seen_versions[$version]} and $filename" >&2
+    exit 1
+  fi
+
+  seen_versions[$version]="$filename"
+done < <(find ../supabase/migrations -maxdepth 1 -type f -name '*.sql' -print | sort)
+
+echo "Migration version check passed."
+
 echo "Preflight passed."
