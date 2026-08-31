@@ -27,16 +27,6 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Restore Flutter project build cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            flutter_app/.dart_tool
-            flutter_app/build
-          key: ${{ runner.os }}-flutter-project-${{ hashFiles('flutter_app/pubspec.lock', 'flutter_app/pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-project-
-
       - name: Build Flutter Web
         run: |
           set +e
