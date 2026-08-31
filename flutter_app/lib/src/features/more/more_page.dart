@@ -1,0 +1,7 @@
+import 'package:flutter/material.dart';
+class MorePage extends StatelessWidget{const MorePage({super.key,required this.onOpen});final void Function(int) onOpen;@override Widget build(BuildContext context){final items=<({IconData icon,String title,String subtitle,int index})>[
+ (icon:Icons.inventory_2_outlined,title:'Produk',subtitle:'Katalog & stok',index:3),
+ (icon:Icons.people_outline,title:'Pelanggan',subtitle:'Data pelanggan',index:4),
+ (icon:Icons.bar_chart_outlined,title:'Laporan',subtitle:'Ringkasan bisnis',index:5),
+ (icon:Icons.settings_outlined,title:'Pengaturan',subtitle:'Bisnis & akun',index:6),
+ ];return ListView(padding:const EdgeInsets.all(16),children:[Text('Lainnya',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),const SizedBox(height:6),const Text('Pusat pengelolaan IRKOP Konter'),const SizedBox(height:18),...items.map((i)=>Card(child:ListTile(contentPadding:const EdgeInsets.all(14),leading:CircleAvatar(child:Icon(i.icon)),title:Text(i.title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(i.subtitle),trailing:const Icon(Icons.arrow_forward_ios,size:16),onTap:()=>onOpen(i.index))))]);}}
