@@ -11,5 +11,7 @@ abstract final class AppPageIndex {
   static const devices = 8;
   static const settings = 9;
   static const expenses = 10;
-  static const more = 11;
+  static const payroll = 11;
+  static const service = 12;
+  static const more = 13;
 }
