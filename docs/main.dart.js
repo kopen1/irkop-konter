@@ -101209,7 +101209,7 @@ aDn(a){var s=0,r=A.x(t.F5),q,p=this,o,n
 var $async$uF=A.y(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:n=J
 s=3
-return A.m(p.a.c4("irkop_cell_products").fM("id,name,category,category_id,sku,sell_price,cost_price,stock,min_stock,unit").bR("business_id",a).bR("is_active",!0).lP("name"),$async$uF)
+return A.m(p.a.c4("irkop_cell_products").fM("id,name,category,sku,sell_price,cost_price,stock,min_stock,unit").bR("business_id",a).bR("is_active",!0).lP("name"),$async$uF)
 case 3:o=n.dP(c,new A.akk(),t.U_)
 o=A.Y(o,o.$ti.i("ap.E"))
 q=o
