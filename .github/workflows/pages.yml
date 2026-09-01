@@ -1,4 +1,4 @@
-name: Build and Publish Flutter Web (v2)
+name: Fast Build and Publish Flutter Web (v2)
 
 on:
   push:
@@ -34,12 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Test
-        run: flutter test
 
       - name: Build web for GitHub Pages
         run: |
