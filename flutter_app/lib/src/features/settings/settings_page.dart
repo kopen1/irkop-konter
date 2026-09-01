@@ -307,11 +307,14 @@ class _SettingsPageState extends State<SettingsPage>
           if(snapshot.connectionState!=ConnectionState.done) const LinearProgressIndicator(),
           if(snapshot.hasError) Text('Gagal memuat akun: '+snapshot.error.toString()),
           Card(child: Column(children: [
-            ...snapshot.data?.map((a)=>SwitchListTile(
-              secondary: CircleAvatar(child: Icon(a.type=='bank'?Icons.account_balance_outlined:a.type=='ewallet'?Icons.wallet_outlined:Icons.payments_outlined)),
-              title: Text(a.name), subtitle: Text(a.type+' • saldo awal '+a.openingBalance.toStringAsFixed(0)),
-              value:a.isActive,onChanged:(v)=>_moneyRepository.toggle(id:a.id,businessId:widget.businessContext!.businessId,active:v).then((_)=>_refreshMoneyAccounts()),
-            )) ?? const [Padding(padding:EdgeInsets.all(16),child:Text('Belum ada akun uang.'))],
+            if ((snapshot.data ?? const <MoneyAccount>[]).isEmpty)
+              const Padding(padding:EdgeInsets.all(16),child:Text('Belum ada akun uang.'))
+            else
+              ...snapshot.data!.map((a)=>SwitchListTile(
+                secondary: CircleAvatar(child: Icon(a.type=='bank'?Icons.account_balance_outlined:a.type=='ewallet'?Icons.wallet_outlined:Icons.payments_outlined)),
+                title: Text(a.name), subtitle: Text(a.type+' • saldo awal '+a.openingBalance.toStringAsFixed(0)),
+                value:a.isActive,onChanged:(v)=>_moneyRepository.toggle(id:a.id,businessId:widget.businessContext!.businessId,active:v).then((_)=>_refreshMoneyAccounts()),
+              )),
           ])),
           const SizedBox(height: 10),
           OutlinedButton.icon(onPressed:_addMoneyAccount,icon:const Icon(Icons.add),label:const Text('Tambah akun uang')),
