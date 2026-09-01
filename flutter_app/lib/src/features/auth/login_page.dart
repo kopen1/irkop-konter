@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/auth/auth_repository.dart';
 
@@ -37,9 +38,6 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _loading = true);
     try {
-      // Legacy contract accepts username/email. The current Supabase adapter
-      // authenticates by email; username aliases are resolved by the backend
-      // before this repository is called when supported by the schema.
       await _auth.signInWithEmail(email: username, password: password);
     } on AuthException catch (error) {
       if (mounted) _showError(error.message);
