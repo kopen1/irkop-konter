@@ -1,6 +1,3 @@
--- Seed minimal produk agar katalog tidak kosong pada business yang tersedia.
--- Tidak menggandakan produk jika business sudah mempunyai data.
-
 insert into public.irkop_cell_products
 (
   business_id,

@@ -1,6 +1,3 @@
--- Kompatibilitas Produk V2.
--- Aman dijalankan berulang kali.
-
 alter table if exists public.irkop_cell_products
   add column if not exists unit text not null default 'pcs';
 
