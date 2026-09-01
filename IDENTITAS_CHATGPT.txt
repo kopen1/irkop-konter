@@ -1,0 +1,4 @@
+IDENTITAS AKSES REPO
+
+File ini dibuat oleh ChatGPT melalui konektor GitHub.
+Tujuan: verifikasi bahwa ChatGPT dapat membaca dan menulis repository IRKOP Konter.
