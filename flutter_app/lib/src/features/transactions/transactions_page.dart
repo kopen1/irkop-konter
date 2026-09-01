@@ -103,12 +103,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       '${item.transactionAt.toLocal().toString().substring(0, 16)}',
                     ),
                     isThreeLine: true,
-                    trailing: Text(
-                      money.format(item.total),
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                    trailing: item.paymentMethod=='transfer'&&item.status=='pending'
+                        ? IconButton(icon:const Icon(Icons.verified_outlined),tooltip:'Konfirmasi transfer',onPressed:()=>_confirmTransfer(item))
+                        : Text(money.format(item.total),style:const TextStyle(fontWeight:FontWeight.w800)),
                     onTap: () => _showDetails(item),
-                    onLongPress: item.status=='completed'?()=>_void(item):null,\n                    trailing: item.paymentMethod=='transfer'&&item.status=='pending'?IconButton(icon:const Icon(Icons.verified_outlined),tooltip:'Konfirmasi transfer',onPressed:()=>_confirmTransfer(item)):Text(money.format(item.total),style:const TextStyle(fontWeight:FontWeight.w800)),
+                    onLongPress: item.status=='completed'?()=>_void(item):null,
                   ),
                 ),
               ),
