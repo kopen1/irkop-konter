@@ -1,12 +1,14 @@
-name: Build Flutter Web (v2)
+name: Build and Publish Flutter Web (v2)
 
 on:
   push:
     branches: [v2]
+    paths-ignore:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: flutter-web-v2
@@ -21,6 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -39,6 +43,21 @@ jobs:
 
       - name: Build web for v2
         run: |
-          flutter build web --release \
-            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          flutter build web --release             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Publish web build to docs
+        working-directory: .
+        run: |
+          rm -rf docs
+          mkdir -p docs
+          cp -R flutter_app/build/web/. docs/
+          touch docs/.nojekyll
+
+      - name: Commit published web build
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "chore(v2): publish latest web build"
+          git push origin HEAD:v2
