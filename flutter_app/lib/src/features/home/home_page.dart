@@ -65,16 +65,16 @@ class _Dashboard extends StatefulWidget{const _Dashboard({required this.demoMode
 class _DashboardState extends State<_Dashboard>{
  final _repo=TransactionRepository();late Future<DashboardMetrics> _future;
  @override void initState(){super.initState();_future=_load();}
- Future<DashboardMetrics> _load()=>widget.businessId==null?Future.value(const DashboardMetrics(todayRevenue:0,todayTransactions:0,recentTransactions:[])):_repo.loadDashboard(widget.businessId!);
+ Future<DashboardMetrics> _load()=>widget.businessId==null?Future.value(const DashboardMetrics(todayRevenue:0,todayTransactions:0,activeCredit:0,cashBalance:0,recentTransactions:[])):_repo.loadDashboard(widget.businessId!);
  Future<void> _refresh()async{setState(()=>_future=_load());await _future;}
- @override Widget build(BuildContext context){final c=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<DashboardMetrics>(future:_future,builder:(context,s){final m=s.data??const DashboardMetrics(todayRevenue:0,todayTransactions:0,recentTransactions:[]);return ListView(padding:const EdgeInsets.all(16),children:[
+ @override Widget build(BuildContext context){final c=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<DashboardMetrics>(future:_future,builder:(context,s){final m=s.data??const DashboardMetrics(todayRevenue:0,todayTransactions:0,activeCredit:0,cashBalance:0,recentTransactions:[]);return ListView(padding:const EdgeInsets.all(16),children:[
  Container(padding:const EdgeInsets.all(22),decoration:BoxDecoration(borderRadius:BorderRadius.circular(26),color:Theme.of(context).colorScheme.primary),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(widget.demoMode?'SELAMAT DATANG':'OUTLET AKTIF',style:TextStyle(color:Theme.of(context).colorScheme.onPrimary.withValues(alpha: .72),fontWeight:FontWeight.bold)),const SizedBox(height:8),Text(widget.demoMode?'IRKOP Konter Demo':'Bisnis Anda siap beroperasi',style:Theme.of(context).textTheme.headlineSmall?.copyWith(color:Theme.of(context).colorScheme.onPrimary,fontWeight:FontWeight.w800)),const SizedBox(height:8),Text('Pantau penjualan, transaksi dan aktivitas bisnis dari satu tempat.',style:TextStyle(color:Theme.of(context).colorScheme.onPrimary.withValues(alpha: .8)))])),
  const SizedBox(height:18),if(s.connectionState!=ConnectionState.done)const LinearProgressIndicator(),const SizedBox(height:12),
  GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,crossAxisSpacing:12,mainAxisSpacing:12,childAspectRatio:1.18,children:[
  _MetricCard(icon:Icons.payments_outlined,label:'Omzet Hari Ini',value:c.format(m.todayRevenue)),
  _MetricCard(icon:Icons.receipt_long_outlined,label:'Transaksi',value:m.todayTransactions.toString()),
- const _MetricCard(icon:Icons.credit_score_outlined,label:'Kasbon Aktif',value:'0'),
- const _MetricCard(icon:Icons.account_balance_wallet_outlined,label:'Saldo Kas',value:'Terkoneksi'),
+ _MetricCard(icon:Icons.credit_score_outlined,label:'Kasbon Aktif',value:c.format(m.activeCredit)),
+ _MetricCard(icon:Icons.account_balance_wallet_outlined,label:'Saldo Kas',value:c.format(m.cashBalance)),
  ]),
  const SizedBox(height:24),Text('Aktivitas Terbaru',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:8),
  if(s.hasError)Text('Gagal memuat data: ${s.error}'),
