@@ -13,6 +13,8 @@ import '../more/more_page.dart';
 import '../credits/credits_page.dart';
 import '../devices/devices_page.dart';
 import '../expenses/expenses_page.dart';
+import '../payroll/payroll_page.dart';
+import '../service/service_page.dart';
 import '../../shared/app_page_index.dart';
 
 class HomePage extends StatefulWidget {
@@ -40,6 +42,8 @@ class _HomePageState extends State<HomePage>{
    DevicesPage(businessId:ctx?.businessId),
    SettingsPage(businessContext:ctx),
    ExpensesPage(businessId:ctx?.businessId),
+   PayrollPage(businessId:ctx?.businessId),
+   ServicePage(businessId:ctx?.businessId),
   ];
   final compactIndex=index<=AppPageIndex.transactions?index:3;
   final body=index==AppPageIndex.more
