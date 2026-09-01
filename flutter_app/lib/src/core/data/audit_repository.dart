@@ -1,3 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-class AuditEntry{const AuditEntry({required this.id,required this.action,required this.entityType,required this.createdAt});final String id,action,entityType;final DateTime createdAt;factory AuditEntry.fromMap(Map<String,dynamic> r)=>AuditEntry(id:r['id'] as String,action:r['action'] as String,entityType:r['entity_type'] as String,createdAt:DateTime.parse(r['created_at'] as String));}
-class AuditRepository{final SupabaseClient _client=Supabase.instance.client;Future<List<AuditEntry>> load(String businessId,{int limit=100})async{final rows=await _client.from('irkop_cell_audit_logs').select('id,action,entity_type,created_at').eq('business_id',businessId).order('created_at',ascending:false).limit(limit);return rows.map<AuditEntry>((r)=>AuditEntry.fromMap(Map<String,dynamic>.from(r))).toList();}}
+
+class AuditRepository {
+  final SupabaseClient _client = Supabase.instance.client;
+
+  Future<List<Map<String, dynamic>>> load(String businessId) async {
+    final rows = await _client
+        .from('irkop_cell_audit_logs')
+        .select()
+        .eq('business_id', businessId)
+        .order('created_at', ascending: false)
+        .limit(100);
+
+    return List<Map<String, dynamic>>.from(rows);
+  }
+}
