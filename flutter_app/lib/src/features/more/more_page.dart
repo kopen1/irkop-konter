@@ -15,6 +15,8 @@ class MorePage extends StatelessWidget {
       _MoreGroup('Operasional', [
         _MoreItem(Icons.credit_score_outlined, 'Kasbon / Piutang', 'Tagihan & pembayaran', AppPageIndex.credits),
         _MoreItem(Icons.account_balance_wallet_outlined, 'Pengeluaran', 'Biaya operasional', AppPageIndex.expenses),
+        _MoreItem(Icons.badge_outlined, 'Gaji Karyawan', 'Periode dan pembayaran', AppPageIndex.payroll),
+        _MoreItem(Icons.phone_android_outlined, 'Service HP', 'Penerimaan dan progres service', AppPageIndex.service),
         _MoreItem(Icons.storefront_outlined, 'Outlet', 'Kelola outlet aktif', AppPageIndex.outlets),
         _MoreItem(Icons.devices_outlined, 'Perangkat', 'Slot & perangkat', AppPageIndex.devices),
       ]),
