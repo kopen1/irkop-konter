@@ -13,7 +13,11 @@ echo "==> Static analysis"
 flutter analyze
 
 echo "==> Test"
-flutter test
+if [[ -d test ]] && find test -type f -name "*_test.dart" -print -quit | grep -q .; then
+  flutter test
+else
+  echo "No Flutter tests found; skipping test step."
+fi
 
 echo "==> Release web build"
 flutter build web --release --pwa-strategy=none --base-href "/irkop-konter/" \
