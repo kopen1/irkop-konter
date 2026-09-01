@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/data/business_context_repository.dart';
 import '../../core/data/business_settings_repository.dart';
+import '../../core/data/money_account_repository.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, this.businessContext});
@@ -20,6 +21,8 @@ class _SettingsPageState extends State<SettingsPage>
   late final TextEditingController _footer;
   final _businessRepository = BusinessContextRepository();
   final _settingsRepository = BusinessSettingsRepository();
+  final _moneyRepository = MoneyAccountRepository();
+  late Future<List<MoneyAccount>> _moneyFuture;
   bool _autoInput = true;
   bool _darkMode = false;
   bool _saving = false;
@@ -27,7 +30,7 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 5, vsync: this);
     _businessName = TextEditingController(
       text: widget.businessContext?.businessName ?? 'IRKOP KONTER',
     );
@@ -35,6 +38,7 @@ class _SettingsPageState extends State<SettingsPage>
     _header = TextEditingController(text: 'TERIMA KASIH ATAS KUNJUNGAN ANDA');
     _footer = TextEditingController(text: 'Semoga harimu menyenangkan!');
     _loadPersistedSettings();
+    _moneyFuture = _loadMoneyAccounts();
   }
 
   @override
@@ -46,6 +50,11 @@ class _SettingsPageState extends State<SettingsPage>
     _footer.dispose();
     super.dispose();
   }
+
+  Future<List<MoneyAccount>> _loadMoneyAccounts() => widget.businessContext == null ? Future.value(const []) : _moneyRepository.load(widget.businessContext!.businessId);
+  Future<void> _refreshMoneyAccounts() async { setState(() => _moneyFuture = _loadMoneyAccounts()); await _moneyFuture; }
+
+  Future<void> _addMoneyAccount() async { final b=widget.businessContext?.businessId; if(b==null)return; final name=TextEditingController(); String type='cash'; final amount=TextEditingController(text:'0'); final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(c)=>StatefulBuilder(builder:(c,setSheet)=>Padding(padding:EdgeInsets.fromLTRB(16,16,16,16+MediaQuery.of(c).viewInsets.bottom),child:Column(mainAxisSize:MainAxisSize.min,children:[const Text('Tambah akun uang'),const SizedBox(height:10),TextField(controller:name,decoration:const InputDecoration(labelText:'Nama akun')),const SizedBox(height:8),DropdownButtonFormField(value:type,items:const [DropdownMenuItem(value:'cash',child:Text('Tunai')),DropdownMenuItem(value:'bank',child:Text('Bank')),DropdownMenuItem(value:'ewallet',child:Text('E-Wallet')),DropdownMenuItem(value:'other',child:Text('Lainnya'))],onChanged:(v)=>setSheet(()=>type=v!),decoration:const InputDecoration(labelText:'Jenis')),const SizedBox(height:8),TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Saldo awal')),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Simpan')))])))); if(ok==true&&name.text.trim().isNotEmpty){await _moneyRepository.create(businessId:b,name:name.text,type:type,openingBalance:double.tryParse(amount.text.replaceAll(RegExp(r'[^0-9.]'),''))??0);await _refreshMoneyAccounts();}}
 
   Future<void> _loadPersistedSettings() async {
     final contextData = widget.businessContext;
@@ -134,7 +143,8 @@ class _SettingsPageState extends State<SettingsPage>
           tabs: const [
             Tab(text: 'Umum'),
             Tab(text: 'NotifHook'),
-            Tab(text: 'Akun & Akses'),
+            Tab(text: 'Akun Uang'),
+            Tab(text: 'User & Akses'),
             Tab(text: 'Audit'),
           ],
         ),
@@ -145,6 +155,7 @@ class _SettingsPageState extends State<SettingsPage>
               _generalTab(),
               _notifHookTab(),
               _accountsTab(),
+              _usersTab(),
               _auditTab(),
             ],
           ),
@@ -288,58 +299,35 @@ class _SettingsPageState extends State<SettingsPage>
         ],
       );
 
-  Widget _accountsTab() => ListView(
+  Widget _accountsTab() => FutureBuilder<List<MoneyAccount>>(future:_moneyFuture,builder:(context,snapshot)=>ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _section('Akun uang', Icons.account_balance_wallet_outlined),
           const SizedBox(height: 10),
-          Card(
-            child: Column(
-              children: const [
-                _MoneyTile(icon: Icons.payments_outlined, name: 'Kas Tunai', type: 'Tunai', active: true),
-                Divider(height: 1),
-                _MoneyTile(icon: Icons.account_balance_outlined, name: 'Bank', type: 'Rekening', active: true),
-                Divider(height: 1),
-                _MoneyTile(icon: Icons.wallet_outlined, name: 'E-Wallet', type: 'Digital', active: true),
-              ],
-            ),
-          ),
+          if(snapshot.connectionState!=ConnectionState.done) const LinearProgressIndicator(),
+          if(snapshot.hasError) Text('Gagal memuat akun: '+snapshot.error.toString()),
+          Card(child: Column(children: [
+            ...snapshot.data?.map((a)=>SwitchListTile(
+              secondary: CircleAvatar(child: Icon(a.type=='bank'?Icons.account_balance_outlined:a.type=='ewallet'?Icons.wallet_outlined:Icons.payments_outlined)),
+              title: Text(a.name), subtitle: Text(a.type+' • saldo awal '+a.openingBalance.toStringAsFixed(0)),
+              value:a.isActive,onChanged:(v)=>_moneyRepository.toggle(id:a.id,businessId:widget.businessContext!.businessId,active:v).then((_)=>_refreshMoneyAccounts()),
+            )) ?? const [Padding(padding:EdgeInsets.all(16),child:Text('Belum ada akun uang.'))],
+          ])),
           const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text('Tambah akun uang'),
-          ),
-          const SizedBox(height: 22),
-          _section('User & permission', Icons.admin_panel_settings_outlined),
-          const SizedBox(height: 10),
-          Card(
-            child: Column(
-              children: const [
-                ListTile(
-                  leading: CircleAvatar(child: Icon(Icons.person)),
-                  title: Text('Admin'),
-                  subtitle: Text('Akses penuh'),
-                  trailing: Chip(label: Text('Aktif')),
-                ),
-                Divider(height: 1),
-                ListTile(
-                  leading: CircleAvatar(child: Icon(Icons.person_outline)),
-                  title: Text('Kasir'),
-                  subtitle: Text('Kasir & transaksi'),
-                  trailing: Icon(Icons.chevron_right),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.person_add_alt_1_outlined),
-            label: const Text('Tambah user'),
-          ),
+          OutlinedButton.icon(onPressed:_addMoneyAccount,icon:const Icon(Icons.add),label:const Text('Tambah akun uang')),
         ],
-      );
+      ));
+
+  Widget _usersTab() => ListView(padding:const EdgeInsets.all(16),children:[
+    _section('User & permission', Icons.admin_panel_settings_outlined),const SizedBox(height:10),
+    const Card(child:Column(children:[
+      ListTile(leading:CircleAvatar(child:Icon(Icons.admin_panel_settings_outlined)),title:Text('Owner / Admin'),subtitle:Text('Akses penuh seluruh modul'),trailing:Chip(label:Text('Aktif'))),
+      Divider(height:1),
+      ListTile(leading:CircleAvatar(child:Icon(Icons.point_of_sale_outlined)),title:Text('Kasir'),subtitle:Text('Akses kasir dan transaksi dapat diatur dari manajemen pengguna server.'),trailing:Icon(Icons.lock_outline)),
+    ])),
+    const SizedBox(height:12),
+    const Card(child:Padding(padding:EdgeInsets.all(14),child:Text('Manajemen akun karyawan memerlukan endpoint admin Supabase agar aplikasi klien tidak pernah menyimpan service key.'))),
+  ]);
 
   Widget _auditTab() => ListView(
         padding: const EdgeInsets.all(16),
