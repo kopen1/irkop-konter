@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../core/data/service_repository.dart';
+import '../../shared/rupiah_input.dart';
 
 class ServicePage extends StatefulWidget {
   const ServicePage({super.key, this.businessId});
@@ -187,10 +189,10 @@ class _ServiceFormPageState extends State<ServiceFormPage> {
     _device = TextEditingController(text: order?.deviceName ?? '');
     _complaint = TextEditingController(text: order?.complaint ?? '');
     _estimate = TextEditingController(
-      text: order?.estimatedCost.toStringAsFixed(0) ?? '0',
+      text: formatRupiahInput(order?.estimatedCost ?? 0),
     );
     _finalCost = TextEditingController(
-      text: order?.finalCost?.toStringAsFixed(0) ?? '',
+      text: order?.finalCost == null ? '' : formatRupiahInput(order!.finalCost!),
     );
     _notes = TextEditingController(text: order?.notes ?? '');
     _status = order?.status ?? 'received';
@@ -209,7 +211,7 @@ class _ServiceFormPageState extends State<ServiceFormPage> {
   }
 
   double _amount(TextEditingController controller) {
-    return double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+    return parseRupiah(controller.text).toDouble();
   }
 
   Future<void> _save() async {
@@ -304,13 +306,27 @@ class _ServiceFormPageState extends State<ServiceFormPage> {
           TextField(
             controller: _estimate,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Estimasi biaya'),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              RupiahInputFormatter(allowEmpty: false),
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Estimasi biaya',
+              prefixText: 'Rp ',
+            ),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: _finalCost,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Biaya akhir'),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              RupiahInputFormatter(),
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Biaya akhir',
+              prefixText: 'Rp ',
+            ),
           ),
           const SizedBox(height: 14),
           TextField(
