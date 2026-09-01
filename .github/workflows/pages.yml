@@ -37,7 +37,7 @@ jobs:
 
       - name: Build web for GitHub Pages
         run: |
-          flutter build web --release --base-href /irkop-konter/ \
+          flutter build web --release --pwa-strategy=none --base-href /irkop-konter/ \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
 
