@@ -174,12 +174,22 @@ class _ProductsPageState extends State<ProductsPage> {
             children.add(const EmptyStateCard(icon: Icons.inventory_2_outlined, title: 'Belum ada produk', subtitle: 'Tambahkan produk baru dari tombol di atas.'));
           } else {
             for (final product in filtered) {
+              final lowStock = product.minStock > 0 && product.stock <= product.minStock;
               children.add(
                 Card(
                   child: ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.inventory_2_outlined)),
-                    title: Text(product.name),
-                    subtitle: Text('${product.sku.isEmpty ? 'Tanpa kode' : product.sku} • ${product.category} • Stok ${product.stock.toStringAsFixed(0)} ${product.unit}'),
+                    leading: CircleAvatar(child: Icon(lowStock ? Icons.warning_amber_rounded : Icons.inventory_2_outlined)),
+                    title: Row(
+                      children: [
+                        Expanded(child: Text(product.name)),
+                        if (lowStock)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: Chip(label: Text('STOK MENIPIS')),
+                          ),
+                      ],
+                    ),
+                    subtitle: Text('${product.sku.isEmpty ? 'Tanpa kode' : product.sku} • ${product.category} • Stok ${product.stock.toStringAsFixed(0)} ${product.unit}${lowStock ? ' • Minimum ${product.minStock.toStringAsFixed(0)} ${product.unit}' : ''}'),
                     trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                       Text(money.format(product.price), style: const TextStyle(fontWeight: FontWeight.w800)),
                       IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(product)),
