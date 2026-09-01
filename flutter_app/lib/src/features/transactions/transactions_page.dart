@@ -68,7 +68,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 ),
                 onChanged: (value) => setState(() => _query = value),
               ),
-              const SizedBox(height: 10),Wrap(spacing:8,children:[ChoiceChip(label:const Text('30 Hari'),selected:_days==30,onSelected:(_)=>setState(()=>_days=30)),ChoiceChip(label:const Text('90 Hari'),selected:_days==90,onSelected:(_)=>setState(()=>_days=90)),DropdownButton<String>(value:_status,items:const [DropdownMenuItem(value:'all',child:Text('Semua status')),DropdownMenuItem(value:'completed',child:Text('Selesai'))],onChanged:(v)=>setState(()=>_status=v??'all')),DropdownButton<String>(value:_method,items:const [DropdownMenuItem(value:'all',child:Text('Semua bayar')),DropdownMenuItem(value:'cash',child:Text('Tunai')),DropdownMenuItem(value:'transfer',child:Text('Transfer')),DropdownMenuItem(value:'credit',child:Text('Kasbon'))],onChanged:(v)=>setState(()=>_method=v??'all'))]),const SizedBox(height: 12),
+              const SizedBox(height: 10),Wrap(spacing:8,children:[ChoiceChip(label:const Text('30 Hari'),selected:_days==30,onSelected:(_)=>setState(()=>_days=30)),ChoiceChip(label:const Text('90 Hari'),selected:_days==90,onSelected:(_)=>setState(()=>_days=90)),DropdownButton<String>(value:_status,items:const [DropdownMenuItem(value:'all',child:Text('Semua status')),DropdownMenuItem(value:'pending',child:Text('Menunggu')),DropdownMenuItem(value:'completed',child:Text('Selesai')),DropdownMenuItem(value:'void',child:Text('Void'))],onChanged:(v)=>setState(()=>_status=v??'all')),DropdownButton<String>(value:_method,items:const [DropdownMenuItem(value:'all',child:Text('Semua bayar')),DropdownMenuItem(value:'cash',child:Text('Tunai')),DropdownMenuItem(value:'transfer',child:Text('Transfer')),DropdownMenuItem(value:'credit',child:Text('Kasbon'))],onChanged:(v)=>setState(()=>_method=v??'all'))]),const SizedBox(height: 12),
               if (snapshot.connectionState != ConnectionState.done)
                 const Center(
                   child: Padding(
@@ -108,7 +108,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     onTap: () => _showDetails(item),
-                    onLongPress: item.status=='completed'?()=>_void(item):null,
+                    onLongPress: item.status=='completed'?()=>_void(item):null,\n                    trailing: item.paymentMethod=='transfer'&&item.status=='pending'?IconButton(icon:const Icon(Icons.verified_outlined),tooltip:'Konfirmasi transfer',onPressed:()=>_confirmTransfer(item)):Text(money.format(item.total),style:const TextStyle(fontWeight:FontWeight.w800)),
                   ),
                 ),
               ),
@@ -119,7 +119,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  Future<void> _void(TransactionSummary t) async {final c=TextEditingController();final ok=await showDialog<bool>(context:context,builder:(x)=>AlertDialog(title:const Text('Void transaksi?'),content:TextField(controller:c,decoration:const InputDecoration(labelText:'Alasan void')),actions:[TextButton(onPressed:()=>Navigator.pop(x,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(x,true),child:const Text('Void'))]));if(ok==true){try{await _repo.voidTransaction(id:t.id,businessId:widget.businessId!,reason:c.text);await _refresh();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Transaksi berhasil di-void.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal void: '+e.toString())));}}c.dispose();}
+  Future<void> _confirmTransfer(TransactionSummary t) async {final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Konfirmasi transfer?'),content:Text(t.transactionNo),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Konfirmasi'))]));if(ok==true){try{await _repo.confirmTransfer(id:t.id,businessId:widget.businessId!);await _refresh();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Transfer dikonfirmasi.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal konfirmasi: '+e.toString())));}}}\n\n  Future<void> _void(TransactionSummary t) async {final c=TextEditingController();final ok=await showDialog<bool>(context:context,builder:(x)=>AlertDialog(title:const Text('Void transaksi?'),content:TextField(controller:c,decoration:const InputDecoration(labelText:'Alasan void')),actions:[TextButton(onPressed:()=>Navigator.pop(x,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(x,true),child:const Text('Void'))]));if(ok==true){try{await _repo.voidTransaction(id:t.id,businessId:widget.businessId!,reason:c.text);await _refresh();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Transaksi berhasil di-void.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal void: '+e.toString())));}}c.dispose();}
 
   Future<void> _showDetails(TransactionSummary transaction) async {
     List<TransactionItemSummary> items;
