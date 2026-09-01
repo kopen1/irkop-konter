@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../core/data/expense_repository.dart';
 import '../../shared/irkop_ui.dart';
+import '../../shared/rupiah_input.dart';
 
 class ExpensesPage extends StatefulWidget {
   const ExpensesPage({super.key,this.businessId});
@@ -16,7 +18,7 @@ class _ExpensesPageState extends State<ExpensesPage>{
   Future<void> _save([Expense? expense]) async {
     if(widget.businessId==null)return;
     final category=TextEditingController(text:expense?.category ?? 'Operasional');
-    final amount=TextEditingController(text:expense?.amount.toStringAsFixed(0) ?? '');
+    final amount=TextEditingController(text:expense == null ? '' : formatRupiahInput(expense.amount));
     final description=TextEditingController(text:expense?.description ?? '');
     final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(context)=>Padding(
       padding:EdgeInsets.fromLTRB(20,20,20,20+MediaQuery.of(context).viewInsets.bottom),
@@ -25,7 +27,7 @@ class _ExpensesPageState extends State<ExpensesPage>{
         const SizedBox(height:16),
         TextField(controller:category,decoration:const InputDecoration(labelText:'Kategori')),
         const SizedBox(height:10),
-        TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Nominal')),
+        TextField(controller:amount,keyboardType:TextInputType.number,inputFormatters:[FilteringTextInputFormatter.digitsOnly,RupiahInputFormatter()],decoration:const InputDecoration(labelText:'Nominal',prefixText:'Rp ')),
         const SizedBox(height:10),
         TextField(controller:description,maxLines:2,decoration:const InputDecoration(labelText:'Keterangan (opsional)')),
         const SizedBox(height:16),
@@ -33,7 +35,7 @@ class _ExpensesPageState extends State<ExpensesPage>{
       ],
     )));
     if(ok!=true)return;
-    final value=double.tryParse(amount.text.replaceAll(RegExp(r'[^0-9.]'),''))??0;
+    final value=parseRupiah(amount.text).toDouble();
     try{
       if(expense==null){await _repo.create(businessId:widget.businessId!,category:category.text,amount:value,description:description.text);}
       else{await _repo.update(id:expense.id,businessId:widget.businessId!,category:category.text,amount:value,description:description.text);}
