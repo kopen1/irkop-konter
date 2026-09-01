@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../core/data/product_repository.dart';
+import '../../shared/rupiah_input.dart';
 import '../../core/models/business_models.dart';
 import '../../shared/irkop_ui.dart';
 
@@ -40,7 +42,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
     final name = TextEditingController(text: product?.name ?? '');
     final category = TextEditingController(text: product?.category ?? '');
-    final price = TextEditingController(text: product?.price.toStringAsFixed(0) ?? '');
+    final price = TextEditingController(text: product == null ? '' : formatRupiahInput(product.price));
     final stock = TextEditingController(text: product?.stock.toStringAsFixed(0) ?? '');
 
     final saved = await showModalBottomSheet<bool>(
@@ -99,9 +101,9 @@ class _ProductsPageState extends State<ProductsPage> {
 
     if (saved == true && name.text.trim().isNotEmpty) {
       try {
-        final parsedPrice = double.tryParse(price.text.replaceAll(',', '.'));
+        final parsedPrice = parseRupiah(price.text).toDouble();
         final parsedStock = double.tryParse(stock.text.replaceAll(',', '.'));
-        if(parsedPrice==null||parsedPrice<0||parsedStock==null||parsedStock<0){_message('Harga dan stok harus berupa angka 0 atau lebih.');return;}
+        if(parsedPrice<0||parsedStock==null||parsedStock<0){_message('Harga dan stok harus berupa angka 0 atau lebih.');return;}
         if (product == null) {
           await _repo.createProduct(
             businessId: businessId,
