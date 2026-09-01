@@ -29,7 +29,7 @@ class _ServicePageState extends State<ServicePage>{
         TextField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Nomor HP')),
         TextField(controller:device,decoration:const InputDecoration(labelText:'Perangkat')),
         TextField(controller:complaint,maxLines:2,decoration:const InputDecoration(labelText:'Keluhan')),
-        DropdownButtonFormField<String>(value:status,items:const [
+        DropdownButtonFormField<String>(initialValue:status,items:const [
           DropdownMenuItem(value:'received',child:Text('Masuk')),DropdownMenuItem(value:'process',child:Text('Proses')),DropdownMenuItem(value:'waiting_parts',child:Text('Menunggu sparepart')),DropdownMenuItem(value:'ready',child:Text('Selesai')),DropdownMenuItem(value:'completed',child:Text('Diambil')),DropdownMenuItem(value:'cancelled',child:Text('Batal')),
         ],onChanged:(v)=>setDialog(()=>status=v??status),decoration:const InputDecoration(labelText:'Status')),
         TextField(controller:estimate,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Estimasi biaya')),
@@ -43,5 +43,47 @@ class _ServicePageState extends State<ServicePage>{
     catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal menyimpan: '+e.toString())));}
   }
   Future<void> _remove(ServiceOrder order) async{final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Hapus tiket?'),content:Text(order.orderNo),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Hapus'))]));if(ok==true){await _repo.delete(id:order.id,businessId:widget.businessId!);_reload();}}
-  @override Widget build(BuildContext context){final money=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return Scaffold(floatingActionButton:widget.businessId==null?null:FloatingActionButton.extended(onPressed:()=>_edit(),icon:const Icon(Icons.add),label:const Text('Tiket')),body:FutureBuilder<List<ServiceOrder>>(future:_future,builder:(c,s){if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());if(s.hasError)return Center(child:Text('Gagal memuat service: '+s.error.toString()));final rows=s.data??const <ServiceOrder>[];if(rows.isEmpty)return const Center(child:Text('Belum ada tiket service.'));return RefreshIndicator(onRefresh:()async{_reload();await _future;},child:ListView.builder(padding:const EdgeInsets.all(12),itemCount:rows.length,itemBuilder:(c,i){final o=rows[i];return Card(child:ListTile(leading:const Icon(Icons.phone_android_outlined),title:Text(o.customerName+' • '+o.deviceName),subtitle:Text(o.orderNo+'\n'+o.status+' • Est. '+money.format(o.estimatedCost)),isThreeLine:true,onTap:()=>_edit(o),trailing:IconButton(icon:const Icon(Icons.delete_outline),onPressed:()=>_remove(o)));}));}));}
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return Scaffold(
+      floatingActionButton: widget.businessId == null ? null : FloatingActionButton.extended(
+        onPressed: () => _edit(),
+        icon: const Icon(Icons.add),
+        label: const Text('Tiket'),
+      ),
+      body: FutureBuilder<List<ServiceOrder>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) return Center(child: Text('Gagal memuat service: ' + snapshot.error.toString()));
+          final rows = snapshot.data ?? const <ServiceOrder>[];
+          if (rows.isEmpty) return const Center(child: Text('Belum ada tiket service.'));
+          return RefreshIndicator(
+            onRefresh: () async { _reload(); await _future; },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: rows.length,
+              itemBuilder: (context, index) {
+                final order = rows[index];
+                return Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.phone_android_outlined),
+                    title: Text(order.customerName + ' • ' + order.deviceName),
+                    subtitle: Text(order.orderNo + '\n' + order.status + ' • Est. ' + money.format(order.estimatedCost)),
+                    isThreeLine: true,
+                    onTap: () => _edit(order),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _remove(order),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
