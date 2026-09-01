@@ -6,22 +6,109 @@ import '../../shared/rupiah_input.dart';
 import '../../core/models/business_models.dart';
 import '../../shared/irkop_ui.dart';
 
-class ProductsPage extends StatefulWidget{const ProductsPage({super.key,this.businessId});final String? businessId;@override State<ProductsPage> createState()=>_ProductsPageState();}
-class _ProductsPageState extends State<ProductsPage>{
- final _repo=ProductRepository(),_categoryRepo=ProductCategoryRepository();late Future<List<Product>> _future;late Future<List<ProductCategory>> _categories;String _query='';
- @override void initState(){super.initState();_future=_load();_categories=_loadCategories();}
- Future<List<Product>> _load()=>widget.businessId==null?Future.value(const []):_repo.loadProducts(widget.businessId!);
- Future<List<ProductCategory>> _loadCategories()=>widget.businessId==null?Future.value(const []):_categoryRepo.load(widget.businessId!);
- Future<void> _refresh()async{setState((){_future=_load();_categories=_loadCategories();});await _future;}
- void _message(String v){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(v)));}
- Future<void> _edit([Product? p])async{
-  final b=widget.businessId;if(b==null){_message('Bisnis belum siap.');return;}
-  final name=TextEditingController(text:p?.name??''),sku=TextEditingController(text:p?.sku??''),category=TextEditingController(text:p?.category??''),price=TextEditingController(text:p==null?'':formatRupiahInput(p.price)),cost=TextEditingController(text:p==null?'':formatRupiahInput(p.costPrice)),stock=TextEditingController(text:p?.stock.toStringAsFixed(0)??''),min=TextEditingController(text:p?.minStock.toStringAsFixed(0)??''),unit=TextEditingController(text:p?.unit??'pcs');
-  final saved=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(c)=>Padding(padding:EdgeInsets.fromLTRB(16,16,16,MediaQuery.of(c).viewInsets.bottom+16),child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(p==null?'Tambah Produk':'Edit Produk',style:Theme.of(c).textTheme.titleLarge),const SizedBox(height:14),TextField(controller:sku,decoration:const InputDecoration(labelText:'Kode produk / SKU')),const SizedBox(height:10),TextField(controller:name,decoration:const InputDecoration(labelText:'Nama produk')),const SizedBox(height:10),TextField(controller:category,decoration:const InputDecoration(labelText:'Kategori')),const SizedBox(height:10),TextField(controller:price,keyboardType:TextInputType.number,inputFormatters:[RupiahInputFormatter()],decoration:const InputDecoration(labelText:'Harga jual',prefixText:'Rp ')),const SizedBox(height:10),TextField(controller:cost,keyboardType:TextInputType.number,inputFormatters:[RupiahInputFormatter()],decoration:const InputDecoration(labelText:'Harga modal',prefixText:'Rp ')),const SizedBox(height:10),Row(children:[Expanded(child:TextField(controller:stock,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Stok'))),const SizedBox(width:10),Expanded(child:TextField(controller:min,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Stok minimum')))]),const SizedBox(height:10),TextField(controller:unit,decoration:const InputDecoration(labelText:'Satuan')),const SizedBox(height:14),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Simpan')))]))));
-  if(saved==true&&name.text.trim().isNotEmpty){try{final pr=parseRupiah(price.text).toDouble(),co=parseRupiah(cost.text).toDouble(),st=double.tryParse(stock.text.replaceAll(',','.'))??0,mi=double.tryParse(min.text.replaceAll(',','.'))??0;if(pr<0||co<0||st<0||mi<0)throw StateError('Nilai tidak boleh negatif.');if(p==null)await _repo.createProduct(businessId:b,name:name.text,category:category.text,price:pr,stock:st,sku:sku.text,costPrice:co,minStock:mi,unit:unit.text);else await _repo.updateProduct(id:p.id,businessId:b,name:name.text,category:category.text,price:pr,stock:st,sku:sku.text,costPrice:co,minStock:mi,unit:unit.text);await _refresh();_message(p==null?'Produk ditambahkan.':'Produk diperbarui.');}catch(e){_message('Gagal menyimpan: $e');}}
-  for(final x in [name,sku,category,price,cost,stock,min,unit])x.dispose();
- }
- Future<void> _category([ProductCategory? p])async{final b=widget.businessId;if(b==null)return;final name=TextEditingController(text:p?.name??'');bool track=p?.trackStock??true;final ok=await showModalBottomSheet<bool>(context:context,builder:(c)=>StatefulBuilder(builder:(c,set)=>Padding(padding:const EdgeInsets.all(16),child:Column(mainAxisSize:MainAxisSize.min,children:[Text(p==null?'Tambah Kategori':'Edit Kategori',style:Theme.of(c).textTheme.titleLarge),TextField(controller:name,decoration:const InputDecoration(labelText:'Nama kategori')),SwitchListTile(title:const Text('Lacak stok'),value:track,onChanged:(v)=>set(()=>track=v)),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Simpan')))]))));if(ok==true&&name.text.trim().isNotEmpty){try{if(p==null)await _categoryRepo.create(businessId:b,name:name.text,trackStock:track);else await _categoryRepo.update(id:p.id,businessId:b,name:name.text,trackStock:track);setState(()=>_categories=_loadCategories());}catch(e){_message('Gagal menyimpan kategori: $e');}}name.dispose();}
- @override Widget build(BuildContext context){final money=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<List<Product>>(future:_future,builder:(context,snapshot){final data=(snapshot.data??const <Product>[]).where((p){final q=_query.toLowerCase();return p.name.toLowerCase().contains(q)||p.category.toLowerCase().contains(q)||p.sku.toLowerCase().contains(q);}).toList();final low=data.where((p)=>p.minStock>0&&p.stock<=p.minStock).toList();return ListView(padding:const EdgeInsets.all(16),children:[IrkopSectionHeader(eyebrow:'Produk & stok',title:'Katalog Produk',subtitle:'CRUD produk, kategori, stok minimum dan harga modal.',icon:Icons.inventory_2_outlined,action:'Tambah Produk',onAction:()=>_edit()),const SizedBox(height:14),Row(children:[Expanded(child:TextField(decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari kode, nama atau kategori',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_query=v))),const SizedBox(width:8),IconButton.filledTonal(onPressed:()=>_category(),icon:const Icon(Icons.category_outlined),tooltip:'Kategori')]),if(low.isNotEmpty)Card(child:Padding(padding:const EdgeInsets.all(12),child:Text('${low.length} produk mencapai/bawah stok minimum: ${low.take(3).map((p)=>p.name).join(', ')}'))),if(snapshot.connectionState!=ConnectionState.done)const Padding(padding:EdgeInsets.all(32),child:Center(child:CircularProgressIndicator())),if(snapshot.hasError)Card(child:Padding(padding:const EdgeInsets.all(18),child:Text('Gagal memuat produk: ${snapshot.error}'))),if(snapshot.connectionState==ConnectionState.done&&!snapshot.hasError&&data.isEmpty)const EmptyStateCard(icon:Icons.inventory_2_outlined,title:'Belum ada produk',subtitle:'Tambahkan produk baru dari tombol di atas.'),...data.map((p)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.inventory_2_outlined)),title:Text(p.name),subtitle:Text('${p.sku.isEmpty?'Tanpa kode':p.sku} • ${p.category} • Stok ${p.stock.toStringAsFixed(0)} ${p.unit}'),trailing:Wrap(children:[Text(money.format(p.price),style:const TextStyle(fontWeight:FontWeight.w800)),IconButton(icon:const Icon(Icons.edit_outlined),onPressed:()=>_edit(p)),IconButton(icon:const Icon(Icons.delete_outline),onPressed:()=>_delete(p))]),onTap:()=>_edit(p))));]));});}
- Future<void> _delete(Product p)async{final b=widget.businessId;if(b==null)return;final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Hapus produk?'),content:Text('Produk "${p.name}" akan dinonaktifkan.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Batal')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Hapus'))]));if(ok==true){try{await _repo.archiveProduct(id:p.id,businessId:b);await _refresh();_message('Produk dinonaktifkan.');}catch(e){_message('Gagal menghapus: $e');}}}
+class ProductsPage extends StatefulWidget {
+  const ProductsPage({super.key, this.businessId});
+  final String? businessId;
+  @override State<ProductsPage> createState() => _ProductsPageState();
+}
+
+class _ProductsPageState extends State<ProductsPage> {
+  final _repo = ProductRepository();
+  final _categoryRepo = ProductCategoryRepository();
+  late Future<List<Product>> _future;
+  late Future<List<ProductCategory>> _categories;
+  String _query = '';
+
+  @override void initState() { super.initState(); _future = _load(); _categories = _loadCategories(); }
+  Future<List<Product>> _load() => widget.businessId == null ? Future.value(const []) : _repo.loadProducts(widget.businessId!);
+  Future<List<ProductCategory>> _loadCategories() => widget.businessId == null ? Future.value(const []) : _categoryRepo.load(widget.businessId!);
+  Future<void> _refresh() async { setState(() { _future = _load(); _categories = _loadCategories(); }); await _future; }
+  void _message(String v) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(v))); }
+
+  Future<void> _edit([Product? p]) async {
+    final b = widget.businessId;
+    if (b == null) { _message('Bisnis belum siap.'); return; }
+    final name = TextEditingController(text: p?.name ?? '');
+    final sku = TextEditingController(text: p?.sku ?? '');
+    final category = TextEditingController(text: p?.category ?? '');
+    final price = TextEditingController(text: p == null ? '' : formatRupiahInput(p.price));
+    final cost = TextEditingController(text: p == null ? '' : formatRupiahInput(p.costPrice));
+    final stock = TextEditingController(text: p?.stock.toStringAsFixed(0) ?? '');
+    final min = TextEditingController(text: p?.minStock.toStringAsFixed(0) ?? '');
+    final unit = TextEditingController(text: p?.unit ?? 'pcs');
+    final saved = await showModalBottomSheet<bool>(
+      context: context, isScrollControlled: true,
+      builder: (c) => Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(c).viewInsets.bottom + 16),
+        child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(p == null ? 'Tambah Produk' : 'Edit Produk', style: Theme.of(c).textTheme.titleLarge),
+          const SizedBox(height: 14),
+          TextField(controller: sku, decoration: const InputDecoration(labelText: 'Kode produk / SKU')),
+          const SizedBox(height: 10), TextField(controller: name, decoration: const InputDecoration(labelText: 'Nama produk')),
+          const SizedBox(height: 10), TextField(controller: category, decoration: const InputDecoration(labelText: 'Kategori')),
+          const SizedBox(height: 10), TextField(controller: price, keyboardType: TextInputType.number, inputFormatters: [RupiahInputFormatter()], decoration: const InputDecoration(labelText: 'Harga jual', prefixText: 'Rp ')),
+          const SizedBox(height: 10), TextField(controller: cost, keyboardType: TextInputType.number, inputFormatters: [RupiahInputFormatter()], decoration: const InputDecoration(labelText: 'Harga modal', prefixText: 'Rp ')),
+          const SizedBox(height: 10), Row(children: [Expanded(child: TextField(controller: stock, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Stok'))), const SizedBox(width: 10), Expanded(child: TextField(controller: min, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Stok minimum')))]),
+          const SizedBox(height: 10), TextField(controller: unit, decoration: const InputDecoration(labelText: 'Satuan')),
+          const SizedBox(height: 14), SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Simpan'))),
+        ])),
+      ),
+    );
+    if (saved == true && name.text.trim().isNotEmpty) {
+      try {
+        final pr = parseRupiah(price.text).toDouble(), co = parseRupiah(cost.text).toDouble();
+        final st = double.tryParse(stock.text.replaceAll(',', '.')) ?? 0, mi = double.tryParse(min.text.replaceAll(',', '.')) ?? 0;
+        if (pr < 0 || co < 0 || st < 0 || mi < 0) throw StateError('Nilai tidak boleh negatif.');
+        if (p == null) {
+          await _repo.createProduct(businessId: b, name: name.text, category: category.text, price: pr, stock: st, sku: sku.text, costPrice: co, minStock: mi, unit: unit.text);
+        } else {
+          await _repo.updateProduct(id: p.id, businessId: b, name: name.text, category: category.text, price: pr, stock: st, sku: sku.text, costPrice: co, minStock: mi, unit: unit.text);
+        }
+        await _refresh(); _message(p == null ? 'Produk ditambahkan.' : 'Produk diperbarui.');
+      } catch (e) { _message('Gagal menyimpan: $e'); }
+    }
+    for (final x in [name, sku, category, price, cost, stock, min, unit]) { x.dispose(); }
+  }
+
+  Future<void> _category([ProductCategory? p]) async {
+    final b = widget.businessId; if (b == null) return;
+    final name = TextEditingController(text: p?.name ?? ''); bool track = p?.trackStock ?? true;
+    final ok = await showModalBottomSheet<bool>(context: context, builder: (c) => StatefulBuilder(builder: (c, set) => Padding(padding: const EdgeInsets.all(16), child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Text(p == null ? 'Tambah Kategori' : 'Edit Kategori', style: Theme.of(c).textTheme.titleLarge),
+      TextField(controller: name, decoration: const InputDecoration(labelText: 'Nama kategori')),
+      SwitchListTile(title: const Text('Lacak stok'), value: track, onChanged: (v) => set(() => track = v)),
+      SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Simpan'))),
+    ]))));
+    if (ok == true && name.text.trim().isNotEmpty) {
+      try {
+        if (p == null) await _categoryRepo.create(businessId: b, name: name.text, trackStock: track); else await _categoryRepo.update(id: p.id, businessId: b, name: name.text, trackStock: track);
+        setState(() => _categories = _loadCategories());
+      } catch (e) { _message('Gagal menyimpan kategori: $e'); }
+    }
+    name.dispose();
+  }
+
+  Future<void> _delete(Product p) async {
+    final b = widget.businessId; if (b == null) return;
+    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Hapus produk?'), content: Text('Produk "${p.name}" akan dinonaktifkan.'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Hapus'))]));
+    if (ok == true) { try { await _repo.archiveProduct(id: p.id, businessId: b); await _refresh(); _message('Produk dinonaktifkan.'); } catch (e) { _message('Gagal menghapus: $e'); } }
+  }
+
+  @override Widget build(BuildContext context) {
+    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return RefreshIndicator(onRefresh: _refresh, child: FutureBuilder<List<Product>>(future: _future, builder: (context, snapshot) {
+      final data = (snapshot.data ?? const <Product>[]).where((p) { final q = _query.toLowerCase(); return p.name.toLowerCase().contains(q) || p.category.toLowerCase().contains(q) || p.sku.toLowerCase().contains(q); }).toList();
+      final low = data.where((p) => p.minStock > 0 && p.stock <= p.minStock).toList();
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        IrkopSectionHeader(eyebrow: 'Produk & stok', title: 'Katalog Produk', subtitle: 'CRUD produk, kategori, stok minimum dan harga modal.', icon: Icons.inventory_2_outlined, action: 'Tambah Produk', onAction: () => _edit()),
+        const SizedBox(height: 14),
+        Row(children: [Expanded(child: TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Cari kode, nama atau kategori', border: OutlineInputBorder()), onChanged: (v) => setState(() => _query = v))), const SizedBox(width: 8), IconButton.filledTonal(onPressed: () => _category(), icon: const Icon(Icons.category_outlined), tooltip: 'Kategori')]),
+        if (low.isNotEmpty) Card(child: Padding(padding: const EdgeInsets.all(12), child: Text('${low.length} produk mencapai/bawah stok minimum: ${low.take(3).map((p) => p.name).join(', ')}'))),
+        if (snapshot.connectionState != ConnectionState.done) const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
+        if (snapshot.hasError) Card(child: Padding(padding: const EdgeInsets.all(18), child: Text('Gagal memuat produk: ${snapshot.error}'))),
+        if (snapshot.connectionState == ConnectionState.done && !snapshot.hasError && data.isEmpty) const EmptyStateCard(icon: Icons.inventory_2_outlined, title: 'Belum ada produk', subtitle: 'Tambahkan produk baru dari tombol di atas.'),
+        ...data.map((p) => Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.inventory_2_outlined)), title: Text(p.name), subtitle: Text('${p.sku.isEmpty ? 'Tanpa kode' : p.sku} • ${p.category} • Stok ${p.stock.toStringAsFixed(0)} ${p.unit}'), trailing: Wrap(children: [Text(money.format(p.price), style: const TextStyle(fontWeight: FontWeight.w800)), IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(p)), IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _delete(p))]), onTap: () => _edit(p))))),
+      ];
+    }));
+  }
 }
