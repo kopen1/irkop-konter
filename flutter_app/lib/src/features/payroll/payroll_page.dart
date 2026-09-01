@@ -3,85 +3,16 @@ import 'package:intl/intl.dart';
 import '../../core/data/payroll_repository.dart';
 import '../../shared/rupiah_input.dart';
 
-class PayrollPage extends StatefulWidget {
-  const PayrollPage({super.key, this.businessId});
-  final String? businessId;
-  @override State<PayrollPage> createState() => _PayrollPageState();
+class PayrollPage extends StatefulWidget { const PayrollPage({super.key,this.businessId}); final String? businessId; @override State<PayrollPage> createState()=>_PayrollPageState(); }
+class _PayrollPageState extends State<PayrollPage>{
+ final repo=PayrollRepository(); late Future<List<PayrollRecord>> future;
+ @override void initState(){super.initState();future=_load();}
+ Future<List<PayrollRecord>> _load()=>widget.businessId==null?Future.value(const []):repo.load(widget.businessId!);
+ Future<void> refresh()async{setState(()=>future=_load());await future;}
+ Future<void> form([PayrollRecord? record])async{final id=widget.businessId;if(id==null)return;final saved=await Navigator.of(context).push<bool>(MaterialPageRoute(builder:(_)=>PayrollFormPage(businessId:id,record:record)));if(saved==true&&mounted)await refresh();}
+ @override Widget build(BuildContext context){final money=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return Scaffold(appBar:AppBar(title:const Text('Gaji Karyawan')),floatingActionButton:widget.businessId==null?null:FloatingActionButton.extended(onPressed:()=>form(),icon:const Icon(Icons.add),label:const Text('Tambah Gaji')),body:FutureBuilder<List<PayrollRecord>>(future:future,builder:(context,s){if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());if(s.hasError)return Center(child:Padding(padding:const EdgeInsets.all(24),child:Column(mainAxisSize:MainAxisSize.min,children:[Text('Gagal memuat gaji\n${s.error}',textAlign:TextAlign.center),const SizedBox(height:12),FilledButton(onPressed:refresh,child:const Text('Coba lagi'))])));final rows=s.data??const <PayrollRecord>[];final total=rows.fold<double>(0,(v,r)=>v+r.netAmount);return RefreshIndicator(onRefresh:refresh,child:ListView(padding:const EdgeInsets.all(16),children:[Card(color:Theme.of(context).colorScheme.primaryContainer,child:Padding(padding:const EdgeInsets.all(20),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('TOTAL GAJI',style:TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:6),Text(money.format(total),style:Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight:FontWeight.w900)),const SizedBox(height:8),Text('${rows.where((r)=>r.paidAt!=null).length} dari ${rows.length} sudah dibayar')]))),const SizedBox(height:20),if(rows.isEmpty)Card(child:Padding(padding:const EdgeInsets.all(28),child:Column(children:[const Icon(Icons.badge_outlined,size:52),const SizedBox(height:12),const Text('Belum ada data gaji',style:TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:14),FilledButton.icon(onPressed:()=>form(),icon:const Icon(Icons.add),label:const Text('Tambah Gaji'))])))else ...rows.map((r)=>Card(child:ListTile(onTap:()=>form(r),leading:CircleAvatar(child:Text(r.employeeName.isEmpty?'?':r.employeeName[0].toUpperCase())),title:Text(r.employeeName,style:const TextStyle(fontWeight:FontWeight.w800)),subtitle:Text(DateFormat('MMMM yyyy','id_ID').format(r.period)),trailing:Text(money.format(r.netAmount),style:const TextStyle(fontWeight:FontWeight.w800)))))]));});}
 }
-
-class _PayrollPageState extends State<PayrollPage> {
-  final repo = PayrollRepository();
-  late Future<List<PayrollRecord>> future;
-  @override void initState() { super.initState(); future = _load(); }
-  Future<List<PayrollRecord>> _load() => widget.businessId == null ? Future.value(<PayrollRecord>[]) : repo.load(widget.businessId!);
-  void refresh() => setState(() { future = _load(); });
-  Future<void> form([PayrollRecord? record]) async {
-    if (widget.businessId == null) return;
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => PayrollFormPage(businessId: widget.businessId!, record: record)));
-    if (saved == true && mounted) refresh();
-  }
-  Future<void> paid(PayrollRecord r) async {
-    if (widget.businessId == null) return;
-    try { await repo.markPaid(id: r.id, businessId: widget.businessId!, paid: r.paidAt == null); if (mounted) refresh(); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e'))); }
-  }
-  @override Widget build(BuildContext context) {
-    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gaji Karyawan')),
-      floatingActionButton: widget.businessId == null ? null : FloatingActionButton.extended(onPressed: () => form(), icon: const Icon(Icons.add), label: const Text('Tambah Gaji')),
-      body: FutureBuilder<List<PayrollRecord>>(
-        future: future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
-          if (snap.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [Text('Gagal memuat gaji\n${snap.error}', textAlign: TextAlign.center), const SizedBox(height: 12), FilledButton(onPressed: refresh, child: const Text('Coba lagi'))])));
-          final rows = snap.data ?? <PayrollRecord>[];
-          final total = rows.fold<double>(0, (s, r) => s + r.netAmount);
-          return RefreshIndicator(onRefresh: () async => refresh(), child: ListView(padding: const EdgeInsets.all(16), children: [
-            Card(color: Theme.of(context).colorScheme.primaryContainer, child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('TOTAL GAJI', style: TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 6), Text(money.format(total), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 8), Text('${rows.where((r) => r.paidAt != null).length} dari ${rows.length} sudah dibayar')]))) ,
-            const SizedBox(height: 20),
-            if (rows.isEmpty) Card(child: Padding(padding: const EdgeInsets.all(28), child: Column(children: [const Icon(Icons.badge_outlined, size: 52), const SizedBox(height: 12), const Text('Belum ada data gaji', style: TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 14), FilledButton.icon(onPressed: () => form(), icon: const Icon(Icons.add), label: const Text('Tambah Gaji'))])))
-            else ...rows.map((r) => Card(child: ListTile(onTap: () => form(r), onLongPress: () => paid(r), leading: CircleAvatar(child: Text(r.employeeName.isEmpty ? '?' : r.employeeName[0].toUpperCase())), title: Text(r.employeeName, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(DateFormat('MMMM yyyy', 'id_ID').format(r.period)), trailing: Text(money.format(r.netAmount), style: const TextStyle(fontWeight: FontWeight.w800))))),
-          ]));
-        },
-      ),
-    );
-  }
-}
-
-class PayrollFormPage extends StatefulWidget {
-  const PayrollFormPage({super.key, required this.businessId, this.record});
-  final String businessId; final PayrollRecord? record;
-  @override State<PayrollFormPage> createState() => _PayrollFormPageState();
-}
-
-class _PayrollFormPageState extends State<PayrollFormPage> {
-  final repo = PayrollRepository(); final key = GlobalKey<FormState>();
-  late final TextEditingController name, base, bonus, deduction, notes;
-  late DateTime period; bool saving = false;
-  @override void initState() { super.initState(); final r = widget.record; name = TextEditingController(text: r?.employeeName ?? ''); base = TextEditingController(text: formatRupiahInput(r?.baseAmount ?? 0)); bonus = TextEditingController(text: formatRupiahInput(r?.bonusAmount ?? 0)); deduction = TextEditingController(text: formatRupiahInput(r?.deductionAmount ?? 0)); notes = TextEditingController(text: r?.notes ?? ''); period = r?.period ?? DateTime.now(); }
-  @override void dispose() { name.dispose(); base.dispose(); bonus.dispose(); deduction.dispose(); notes.dispose(); super.dispose(); }
-  int val(TextEditingController c) => parseRupiah(c.text);
-  int get net => val(base) + val(bonus) - val(deduction);
-  Future<void> save() async {
-    if (!(key.currentState?.validate() ?? false)) return;
-    if (net < 0) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Potongan tidak boleh melebihi gaji.'))); return; }
-    setState(() => saving = true);
-    try { await repo.save(id: widget.record?.id, businessId: widget.businessId, employeeName: name.text, period: period, baseAmount: val(base).toDouble(), bonusAmount: val(bonus).toDouble(), deductionAmount: val(deduction).toDouble(), notes: notes.text); if (mounted) Navigator.pop(context, true); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e'))); }
-    finally { if (mounted) setState(() => saving = false); }
-  }
-  Widget moneyField(String label, TextEditingController c, IconData icon) => TextFormField(controller: c, keyboardType: TextInputType.number, inputFormatters: [RupiahInputFormatter(allowEmpty: false)], decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon), prefixText: 'Rp '), validator: (v) => v == null || v.isEmpty ? 'Nominal wajib diisi' : null);
-  @override Widget build(BuildContext context) {
-    final money = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-    return Scaffold(appBar: AppBar(title: Text(widget.record == null ? 'Tambah Gaji' : 'Edit Gaji')), body: SafeArea(child: Form(key: key, child: ListView(padding: const EdgeInsets.all(16), children: [
-      TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Nama karyawan', hintText: 'Contoh: Andi', prefixIcon: Icon(Icons.person_outline)), validator: (v) => v == null || v.trim().isEmpty ? 'Nama wajib diisi' : null),
-      const SizedBox(height: 14),
-      Card(child: ListTile(leading: const Icon(Icons.calendar_month), title: const Text('Periode'), subtitle: Text(DateFormat('MMMM yyyy', 'id_ID').format(period)), onTap: () async { final p = await showDatePicker(context: context, initialDate: period, firstDate: DateTime(2020), lastDate: DateTime(2100)); if (p != null && mounted) setState(() => period = p); })),
-      const SizedBox(height: 14), moneyField('Gaji pokok', base, Icons.account_balance_wallet_outlined), const SizedBox(height: 12), moneyField('Bonus', bonus, Icons.add_circle_outline), const SizedBox(height: 12), moneyField('Potongan', deduction, Icons.remove_circle_outline), const SizedBox(height: 16),
-      Card(color: Theme.of(context).colorScheme.secondaryContainer, child: ListTile(title: const Text('Total diterima', style: TextStyle(fontWeight: FontWeight.w800)), trailing: Text(money.format(net), style: const TextStyle(fontWeight: FontWeight.w900)))),
-      const SizedBox(height: 12), TextFormField(controller: notes, maxLines: 3, decoration: const InputDecoration(labelText: 'Catatan', hintText: 'Opsional', prefixIcon: Icon(Icons.notes_outlined))), const SizedBox(height: 22),
-      FilledButton.icon(onPressed: saving ? null : save, icon: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save), label: Text(saving ? 'Menyimpan...' : 'Simpan Gaji')),
-    ]))));
-  }
-}
+class PayrollFormPage extends StatefulWidget{const PayrollFormPage({super.key,required this.businessId,this.record});final String businessId;final PayrollRecord? record;@override State<PayrollFormPage> createState()=>_PayrollFormPageState();}
+class _PayrollFormPageState extends State<PayrollFormPage>{final repo=PayrollRepository();final key=GlobalKey<FormState>();late final TextEditingController name,base,bonus,deduction,notes;late DateTime period;bool saving=false;@override void initState(){super.initState();final r=widget.record;name=TextEditingController(text:r?.employeeName??'');base=TextEditingController(text:formatRupiahInput(r?.baseAmount??0));bonus=TextEditingController(text:formatRupiahInput(r?.bonusAmount??0));deduction=TextEditingController(text:formatRupiahInput(r?.deductionAmount??0));notes=TextEditingController(text:r?.notes??'');period=r?.period??DateTime.now();}@override void dispose(){name.dispose();base.dispose();bonus.dispose();deduction.dispose();notes.dispose();super.dispose();}int val(TextEditingController c)=>parseRupiah(c.text);int get net=>val(base)+val(bonus)-val(deduction);Future<void> save()async{if(!(key.currentState?.validate()??false))return;if(net<0){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Potongan tidak boleh melebihi gaji.')));return;}setState(()=>saving=true);try{await repo.save(id:widget.record?.id,businessId:widget.businessId,employeeName:name.text,period:period,baseAmount:val(base).toDouble(),bonusAmount:val(bonus).toDouble(),deductionAmount:val(deduction).toDouble(),notes:notes.text);if(mounted)Navigator.pop(context,true);}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal menyimpan: $e')));}finally{if(mounted)setState(()=>saving=false);}}
+Widget moneyField(String label,TextEditingController c,IconData icon)=>TextFormField(controller:c,keyboardType:TextInputType.number,inputFormatters:[RupiahInputFormatter(allowEmpty:false)],decoration:InputDecoration(labelText:label,prefixIcon:Icon(icon),prefixText:'Rp '),validator:(v)=>v==null||v.isEmpty?'Nominal wajib diisi':null);
+@override Widget build(BuildContext context){final money=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return Scaffold(appBar:AppBar(title:Text(widget.record==null?'Tambah Gaji':'Edit Gaji')),body:SafeArea(child:Form(key:key,child:ListView(padding:const EdgeInsets.all(16),children:[TextFormField(controller:name,autofocus:true,decoration:const InputDecoration(labelText:'Nama karyawan',hintText:'Contoh: Andi',prefixIcon:Icon(Icons.person_outline)),validator:(v)=>v==null||v.trim().isEmpty?'Nama wajib diisi':null),const SizedBox(height:14),Card(child:ListTile(leading:const Icon(Icons.calendar_month),title:const Text('Periode'),subtitle:Text(DateFormat('MMMM yyyy','id_ID').format(period)),onTap:()async{final p=await showDatePicker(context:context,initialDate:period,firstDate:DateTime(2020),lastDate:DateTime(2100));if(p!=null&&mounted)setState(()=>period=p);})),const SizedBox(height:14),moneyField('Gaji pokok',base,Icons.account_balance_wallet_outlined),const SizedBox(height:12),moneyField('Bonus',bonus,Icons.add_circle_outline),const SizedBox(height:12),moneyField('Potongan',deduction,Icons.remove_circle_outline),const SizedBox(height:16),Card(color:Theme.of(context).colorScheme.secondaryContainer,child:ListTile(title:const Text('Total diterima',style:TextStyle(fontWeight:FontWeight.w800)),trailing:Text(money.format(net),style:const TextStyle(fontWeight:FontWeight.w900)))),const SizedBox(height:12),TextFormField(controller:notes,maxLines:3,decoration:const InputDecoration(labelText:'Catatan',hintText:'Opsional',prefixIcon:Icon(Icons.notes_outlined))),const SizedBox(height:22),SizedBox(height:52,child:FilledButton.icon(onPressed:saving?null:save,icon:saving?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2)):const Icon(Icons.save),label:Text(saving?'Menyimpan...':'Simpan Gaji')))]))));}}
