@@ -29,27 +29,23 @@ class TransactionRepository {
     return rows.map<TransactionItemSummary>((r)=>TransactionItemSummary.fromMap(r)).toList();
   }
   Future<void> voidTransaction({required String id,required String businessId,required String reason}) async {
-    final clean=reason.trim();
-    if(clean.isEmpty)throw StateError('Alasan void wajib diisi.');
-    await _client.from('irkop_cell_transaction_void_audit').insert({'transaction_id':id,'business_id':businessId,'reason':clean});
-    final updated=await _client.from('irkop_cell_transactions').update({'status':'void'}).eq('id',id).eq('business_id',businessId).eq('status','completed').select('id');if(updated.isEmpty)throw StateError('Transaksi tidak dapat di-void.');
+    final clean=reason.trim();if(clean.isEmpty)throw StateError('Alasan void wajib diisi.');
+    await _client.rpc('irkop_cell_void_transaction',params:{'p_transaction_id':id,'p_business_id':businessId,'p_reason':clean});
   }
   Future<DashboardMetrics> loadDashboard(String businessId) async {
-    final transactions=await loadTransactions(businessId);
-    final now=DateTime.now(),today=DateTime(now.year,now.month,now.day);
+    final transactions=await loadTransactions(businessId);final now=DateTime.now(),today=DateTime(now.year,now.month,now.day);
     final completed=transactions.where((t){final d=t.transactionAt.toLocal();return !d.isBefore(today)&&t.status=='completed';}).toList();
     return DashboardMetrics(todayRevenue:completed.fold<double>(0,(s,t)=>s+t.total),todayTransactions:completed.length,recentTransactions:transactions.take(8).toList());
   }
   Future<TransactionSummary> checkout({required String businessId,required String outletId,required List<CartItem> items,required String paymentMethod,String? customerId}) async {
     if(items.isEmpty)throw StateError('Keranjang kosong.');
-    if(!const {'cash','transfer','credit'}.contains(paymentMethod))throw StateError('Metode pembayaran tidak valid.');
-    if(items.any((i)=>i.qty<=0||i.qty>i.product.stock))throw StateError('Jumlah item tidak valid atau melebihi stok.');
-    final total=items.fold<double>(0,(s,i)=>s+i.subtotal),no='TRX-'+DateTime.now().microsecondsSinceEpoch.toString();
-    final transaction=await _client.from('irkop_cell_transactions').insert({'business_id':businessId,'outlet_id':outletId,'transaction_no':no,'payment_method':paymentMethod,'status':'completed','total':total,'customer_id':customerId}).select('id,transaction_no,payment_method,status,total,transaction_at').single();
-    final id=transaction['id'] as String;
-    await _client.from('irkop_cell_transaction_items').insert(items.map((i)=>{'transaction_id':id,'product_id':i.product.id,'product_name':i.product.name,'qty':i.qty,'unit_price':i.product.price,'subtotal':i.subtotal}).toList());
-    for(final i in items){final next=i.product.stock-i.qty;await _client.from('irkop_cell_products').update({'stock':next}).eq('id',i.product.id).eq('business_id',businessId);}
-    if(paymentMethod=='cash')await _client.from('irkop_cell_cash_mutations').insert({'business_id':businessId,'outlet_id':outletId,'transaction_id':id,'mutation_type':'in','amount':total,'description':'Penjualan '+no});
-    return TransactionSummary.fromMap(transaction);
+    if(!const {'cash','cash_tunai','transfer','credit'}.contains(paymentMethod))throw StateError('Metode pembayaran tidak valid.');
+    if(paymentMethod=='credit'&&customerId==null)throw StateError('Pelanggan wajib dipilih untuk kasbon.');
+    if(items.any((i)=>i.qty<=0))throw StateError('Jumlah item tidak valid.');
+    final rows=await _client.rpc('irkop_cell_checkout',params:{
+      'p_business_id':businessId,'p_outlet_id':outletId,'p_items':items.map((i)=>{'product_id':i.product.id,'qty':i.qty}).toList(),'p_payment_method':paymentMethod,'p_customer_id':customerId,
+    });
+    final data=rows is List?rows.first:rows;
+    return TransactionSummary.fromMap(Map<String,dynamic>.from(data as Map));
   }
 }
