@@ -41,9 +41,11 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Build web for v2
+      - name: Build web for GitHub Pages
         run: |
-          flutter build web --release             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          flutter build web --release --base-href /irkop-konter/ \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
 
       - name: Publish web build to docs
         working-directory: .
