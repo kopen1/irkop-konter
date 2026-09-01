@@ -1,25 +1,20 @@
-name: Deploy Flutter Web to GitHub Pages
+name: Build Flutter Web (v2)
 
 on:
   push:
-    branches: [master, v2]
+    branches: [v2]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: flutter-web-v2
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-v2:
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     defaults:
       run:
         working-directory: flutter_app
@@ -33,38 +28,17 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Setup Supabase CLI
-        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_REF != ''
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Push Supabase schema
-        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_REF != ''
-        working-directory: .
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build web for v2
         run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_REF"
-          supabase db push --linked --include-all
-
-      - name: Final project run (preflight + analyze + test + build)
-        run: bash ../fix/finalize.sh
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: flutter_app/build/web
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          flutter build web --release \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
