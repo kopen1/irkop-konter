@@ -7,35 +7,38 @@ class IrkopCellApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const navy = Color(0xFF12325C);
+    const ink = Color(0xFF16243A);
+    const canvas = Color(0xFFF6F8FC);
+    final scheme = ColorScheme.fromSeed(
+      seedColor: navy,
+      brightness: Brightness.light,
+      primary: navy,
+      secondary: const Color(0xFF4F8CFF),
+      surface: Colors.white,
+    );
+
     return MaterialApp(
       title: 'IRKOP Konter',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: navy,
-          primary: navy,
-          secondary: const Color(0xFF4F8CFF),
-          surface: const Color(0xFFF8FAFD),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFD),
+        colorScheme: scheme,
+        scaffoldBackgroundColor: canvas,
+        splashFactory: InkSparkle.splashFactory,
         appBarTheme: const AppBarTheme(
           centerTitle: false,
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: Color(0xFFF8FAFD),
+          backgroundColor: canvas,
           surfaceTintColor: Colors.transparent,
-          titleTextStyle: TextStyle(
-            color: Color(0xFF16243A),
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
+          titleTextStyle: TextStyle(color: ink, fontSize: 19, fontWeight: FontWeight.w900),
         ),
         cardTheme: CardThemeData(
           elevation: 0,
           margin: EdgeInsets.zero,
           color: Colors.white,
           surfaceTintColor: Colors.transparent,
+          clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
             side: const BorderSide(color: Color(0xFFE7ECF3)),
@@ -44,28 +47,46 @@ class IrkopCellApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE0E7F0)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE0E7F0))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE0E7F0))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: navy, width: 1.5)),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE0E7F0)),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            side: const BorderSide(color: Color(0xFFD9E1EC)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800),
           ),
+        ),
+        chipTheme: ChipThemeData(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide.none,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
         navigationBarTheme: const NavigationBarThemeData(
-          height: 70,
+          height: 72,
+          elevation: 0,
+          backgroundColor: Colors.white,
           indicatorColor: Color(0xFFE3ECFF),
-          labelTextStyle: WidgetStatePropertyAll(
-            TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-          ),
+          labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
         ),
+        dividerTheme: const DividerThemeData(color: Color(0xFFEDF1F6), thickness: 1),
       ),
       home: const AuthGate(),
       builder: (context, child) => ScrollConfiguration(
         behavior: const _NoGlowScrollBehavior(),
-        child: child!,
+        child: child ?? const SizedBox.shrink(),
       ),
     );
   }
@@ -74,9 +95,5 @@ class IrkopCellApp extends StatelessWidget {
 class _NoGlowScrollBehavior extends MaterialScrollBehavior {
   const _NoGlowScrollBehavior();
   @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) => child;
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
 }
