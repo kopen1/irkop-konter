@@ -9,8 +9,16 @@ class PayrollRecord {
 }
 class PayrollRepository {
  final _client=Supabase.instance.client;
- Future<List<PayrollRecord>> load(String businessId) async { if(!Env.isSupabaseConfigured)return const []; final rows=await _client.from('irkop_cell_payroll_records').select('id,employee_name,period,base_amount,bonus_amount,deduction_amount,paid_at,notes').eq('business_id',businessId).order('period',ascending:false); return rows.map<PayrollRecord>((r)=>PayrollRecord.fromMap(r)).toList(); }
- Future<void> save({String? id,required String businessId,required String employeeName,required DateTime period,required double baseAmount,required double bonusAmount,required double deductionAmount,required String notes}) async { if(employeeName.trim().isEmpty)throw StateError('Nama karyawan wajib diisi.'); final data={'business_id':businessId,'employee_name':employeeName.trim(),'period':DateTime(period.year,period.month,1).toIso8601String(),'base_amount':baseAmount,'bonus_amount':bonusAmount,'deduction_amount':deductionAmount,'notes':notes.trim()}; if(id==null)await _client.from('irkop_cell_payroll_records').insert(data);else await _client.from('irkop_cell_payroll_records').update(data).eq('id',id).eq('business_id',businessId); }
+ Future<List<PayrollRecord>> load(String businessId) async {
+   if(!Env.isSupabaseConfigured)return const [];
+   final rows=await _client.from('irkop_cell_payroll_records').select('id,employee_name,period,base_amount,bonus_amount,deduction_amount,paid_at,notes').eq('business_id',businessId).order('period',ascending:false);
+   return rows.map<PayrollRecord>((r)=>PayrollRecord.fromMap(r)).toList();
+ }
+ Future<void> save({String? id,required String businessId,required String employeeName,required DateTime period,required double baseAmount,required double bonusAmount,required double deductionAmount,required String notes}) async {
+   if(employeeName.trim().isEmpty)throw StateError('Nama karyawan wajib diisi.');
+   final data={'business_id':businessId,'employee_name':employeeName.trim(),'period':DateTime(period.year,period.month,1).toIso8601String(),'base_amount':baseAmount,'bonus_amount':bonusAmount,'deduction_amount':deductionAmount,'notes':notes.trim()};
+   if(id==null)await _client.from('irkop_cell_payroll_records').insert(data);else await _client.from('irkop_cell_payroll_records').update(data).eq('id',id).eq('business_id',businessId);
+ }
  Future<void> markPaid({required String id,required String businessId,bool paid=true})=>_client.from('irkop_cell_payroll_records').update({'paid_at':paid?DateTime.now().toUtc().toIso8601String():null}).eq('id',id).eq('business_id',businessId);
  Future<void> delete({required String id,required String businessId})=>_client.from('irkop_cell_payroll_records').delete().eq('id',id).eq('business_id',businessId);
 }
