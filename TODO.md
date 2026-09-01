@@ -61,7 +61,7 @@ IRKOP Konter
 | Android native | [~] | Codebase Flutter sama, perlu QA build/install perangkat |
 | Offline-first/sinkronisasi penuh | [ ] | Belum ada status implementasi penuh yang terdokumentasi |
 | Lisensi/subscription penuh | [ ] | Masih arah/scope, belum ditutup sebagai fitur final |
-| Test otomatis modul | [ ] | Belum ada test Flutter yang terlihat di repository |
+| Test otomatis modul | [~] | Smoke test navigasi dan indeks halaman tersedia; test repository perlu ditambah |
 
 ## 4. Database & migration
 
@@ -152,8 +152,8 @@ Setiap perubahan besar wajib cek:
 
 - [~] QA semua modul terhadap Supabase production/staging.
 - [~] Pastikan seluruh migration benar-benar diterapkan pada database target.
-- [ ] Tambahkan automated test minimal untuk repository dan navigasi utama.
-- [ ] Tambahkan smoke test untuk semua menu agar halaman blank/routing salah cepat terdeteksi.
+- [~] Tambahkan automated test minimal: navigasi utama sudah diuji; test repository masih perlu ditambah.
+- [x] Tambahkan smoke test menu utama agar routing salah/blank cepat terdeteksi.
 - [~] QA Web GitHub Pages setelah setiap perubahan besar.
 - [~] QA Android build/install native.
 
