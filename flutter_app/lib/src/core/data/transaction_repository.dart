@@ -26,7 +26,7 @@ class TransactionRepository {
     if(total<=0)throw StateError('Nominal transaksi harus lebih dari 0.');
     if(DateTime.now().difference(transactionAt).inDays>30)throw StateError('Tanggal manual maksimal 30 hari ke belakang.');
     var targetOutlet=outletId;
-    if(targetOutlet==null){final row=await _client.from('irkop_cell_outlets').select('id').eq('business_id',businessId).eq('is_active',true).order('created_at').limit(1).maybeSingle();targetOutlet=row?['id'] as String:null;}
+    if(targetOutlet==null){final row=await _client.from('irkop_cell_outlets').select('id').eq('business_id',businessId).eq('is_active',true).order('created_at').limit(1).maybeSingle();targetOutlet=row?['id'] as String?;}
     if(targetOutlet==null)throw StateError('Outlet aktif belum tersedia.');
     final result=await _client.rpc('irkop_cell_manual_transaction',params:{'p_business_id':businessId,'p_outlet_id':targetOutlet,'p_total':total,'p_payment_method':paymentMethod,'p_transaction_at':transactionAt.toUtc().toIso8601String(),'p_notes':notes});
     final data=result is List?result.first:result;return TransactionSummary.fromMap(Map<String,dynamic>.from(data as Map));
