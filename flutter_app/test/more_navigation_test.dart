@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:irkop_konter/src/features/more/more_page.dart';
-import 'package:irkop_konter/src/shared/app_page_index.dart';
+import 'package:irkop_cell/src/features/more/more_page.dart';
+import 'package:irkop_cell/src/shared/app_page_index.dart';
 
 void main() {
   Future<void> pumpMenu(

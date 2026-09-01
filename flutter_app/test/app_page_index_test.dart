@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:irkop_konter/src/shared/app_page_index.dart';
+import 'package:irkop_cell/src/shared/app_page_index.dart';
 
 void main() {
   test('all application page indexes are unique and contiguous', () {

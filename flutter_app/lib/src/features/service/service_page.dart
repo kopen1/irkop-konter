@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../core/data/service_repository.dart';
-import '../../shared/irkop_ui.dart';
 
-class ServicePage extends StatefulWidget{const ServicePage({super.key,this.businessId});final String? businessId;@override State<ServicePage> createState()=>_ServicePageState();}
-class _ServicePageState extends State<ServicePage>{final _repo=ServiceRepository();late Future<List<ServiceOrder>> _future;String _q='';@override void initState(){super.initState();_future=_load();}Future<List<ServiceOrder>> _load()=>widget.businessId==null?Future.value(const[]):_repo.load(widget.businessId!);Future<void> _refresh()async{setState(()=>_future=_load());await _future;}
-Future<void> _edit([ServiceOrder? x])async{final b=widget.businessId;if(b==null)return;final n=TextEditingController(text:x?.customerName??''),p=TextEditingController(text:x?.customerPhone??''),d=TextEditingController(text:x?.deviceName??''),c=TextEditingController(text:x?.complaint??''),cost=TextEditingController(text:(x?.estimatedCost??0).toStringAsFixed(0)),notes=TextEditingController(text:x?.notes??'');String status=x?.status??'received';final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(z)=>StatefulBuilder(builder:(z,setSheet)=>Padding(padding:EdgeInsets.fromLTRB(16,16,16,16+MediaQuery.of(z).viewInsets.bottom),child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(x==null?'Terima Service':'Ubah Service',style:Theme.of(z).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:12),TextField(controller:n,decoration:const InputDecoration(labelText:'Nama pelanggan')),const SizedBox(height:8),TextField(controller:p,decoration:const InputDecoration(labelText:'Telepon')),const SizedBox(height:8),TextField(controller:d,decoration:const InputDecoration(labelText:'Perangkat')),const SizedBox(height:8),TextField(controller:c,maxLines:2,decoration:const InputDecoration(labelText:'Keluhan')),const SizedBox(height:8),DropdownButtonFormField(initialValue:status,items:const [DropdownMenuItem(value:'received',child:Text('Diterima')),DropdownMenuItem(value:'process',child:Text('Proses')),DropdownMenuItem(value:'waiting_parts',child:Text('Menunggu part')),DropdownMenuItem(value:'ready',child:Text('Siap diambil')),DropdownMenuItem(value:'completed',child:Text('Selesai')),DropdownMenuItem(value:'cancelled',child:Text('Dibatalkan'))],onChanged:(v)=>setSheet(()=>status=v!),decoration:const InputDecoration(labelText:'Status')),const SizedBox(height:8),TextField(controller:cost,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Estimasi biaya')),const SizedBox(height:8),TextField(controller:notes,maxLines:2,decoration:const InputDecoration(labelText:'Catatan')),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(z,true),child:const Text('Simpan')))])))));if(ok==true&&n.text.trim().isNotEmpty&&d.text.trim().isNotEmpty){try{await _repo.save(id:x?.id,businessId:b,customerName:n.text,customerPhone:p.text,deviceName:d.text,complaint:c.text,status:status,estimatedCost:double.tryParse(cost.text.replaceAll(RegExp(r'[^0-9.]'),''))??0,finalCost:x?.finalCost,notes:notes.text);await _refresh();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal: '+e.toString())));}}}
-@override Widget build(BuildContext c){final money=NumberFormat.currency(locale:'id_ID',symbol:'Rp ',decimalDigits:0);return RefreshIndicator(onRefresh:_refresh,child:FutureBuilder<List<ServiceOrder>>(future:_future,builder:(c,s){final rows=(s.data??const <ServiceOrder>[]).where((e)=>(e.orderNo+' '+e.customerName+' '+e.deviceName).toLowerCase().contains(_q.toLowerCase())).toList();return ListView(padding:const EdgeInsets.fromLTRB(16,12,16,28),children:[IrkopSectionHeader(eyebrow:'LAYANAN',title:'Service HP',subtitle:'Kelola penerimaan, progres dan penyelesaian service.',icon:Icons.phone_android_outlined,action:'Terima Service',onAction:()=>_edit()),const SizedBox(height:14),TextField(onChanged:(v)=>setState(()=>_q=v),decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Cari nomor service atau pelanggan')),const SizedBox(height:12),if(s.connectionState!=ConnectionState.done)const LinearProgressIndicator(),if(s.hasError)Text('Gagal memuat service: '+s.error.toString()),if(!s.hasError&&s.connectionState==ConnectionState.done&&rows.isEmpty)const EmptyStateCard(icon:Icons.phone_android_outlined,title:'Belum ada service',subtitle:'Service yang diterima akan muncul di sini.'),...rows.map((e)=>Card(margin:const EdgeInsets.only(bottom:10),child:ListTile(onTap:()=>_edit(e),leading:const CircleAvatar(child:Icon(Icons.phone_android_outlined)),title:Text(e.deviceName,style:const TextStyle(fontWeight:FontWeight.w800)),subtitle:Text(e.customerName+' • '+e.status),trailing:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.end,children:[Text(money.format(e.finalCost??e.estimatedCost),style:const TextStyle(fontWeight:FontWeight.w800)),Text(DateFormat('dd MMM','id_ID').format(e.receivedAt.toLocal()))]))))]); })); } }
+class ServicePage extends StatelessWidget {
+  const ServicePage({super.key, this.businessId});
+  final String? businessId;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.phone_android_outlined, size: 40),
+                  const SizedBox(height: 16),
+                  Text('Service HP', style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  const Text('Catat penerimaan perangkat dan pantau progres pengerjaan service.'),
+                  const SizedBox(height: 20),
+                  const Text('Belum ada tiket service.'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+}
